@@ -797,7 +797,7 @@ namespace MifareCardProg
             this.tcAccessBits.Location = new System.Drawing.Point(743, 23);
             this.tcAccessBits.Name = "tcAccessBits";
             this.tcAccessBits.SelectedIndex = 0;
-            this.tcAccessBits.Size = new System.Drawing.Size(400, 233);
+            this.tcAccessBits.Size = new System.Drawing.Size(536, 233);
             this.tcAccessBits.TabIndex = 54;
             // 
             // tpBlock0
@@ -805,7 +805,7 @@ namespace MifareCardProg
             this.tpBlock0.Location = new System.Drawing.Point(4, 22);
             this.tpBlock0.Name = "tpBlock0";
             this.tpBlock0.Padding = new System.Windows.Forms.Padding(3);
-            this.tpBlock0.Size = new System.Drawing.Size(392, 207);
+            this.tpBlock0.Size = new System.Drawing.Size(528, 207);
             this.tpBlock0.TabIndex = 0;
             this.tpBlock0.Text = "Data Block 0";
             this.tpBlock0.UseVisualStyleBackColor = true;
@@ -883,7 +883,7 @@ namespace MifareCardProg
             // 
             // btnCalculateAccessBits
             // 
-            this.btnCalculateAccessBits.Location = new System.Drawing.Point(1040, 267);
+            this.btnCalculateAccessBits.Location = new System.Drawing.Point(1180, 267);
             this.btnCalculateAccessBits.Name = "btnCalculateAccessBits";
             this.btnCalculateAccessBits.Size = new System.Drawing.Size(99, 23);
             this.btnCalculateAccessBits.TabIndex = 60;
@@ -895,7 +895,7 @@ namespace MifareCardProg
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1155, 684);
+            this.ClientSize = new System.Drawing.Size(1330, 684);
             this.Controls.Add(this.btnCalculateAccessBits);
             this.Controls.Add(this.tAB4);
             this.Controls.Add(this.tAB3);
