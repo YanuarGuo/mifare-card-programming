@@ -25,6 +25,10 @@ namespace MifareCardProg
         private readonly List<string[]> checkedDataBlock1;
         private readonly List<string[]> checkedDataBlock3;
         private readonly List<string[]> checkedSectorTrailer;
+        private bool[,] block0 = new bool[2, 3];
+        private bool[,] block1 = new bool[2, 3];
+        private bool[,] block2 = new bool[2, 3];
+        private bool[,] block3 = new bool[2, 3];
         public System.Windows.Forms.TextBox[] accessBitTextBoxes;
         private readonly bool[,] accessBits = new bool[8, 3];
         public int retCode,
@@ -59,32 +63,64 @@ namespace MifareCardProg
             accessBits[7, 0] = !accessBits[3, 1]; // -C10
             accessBits[7, 1] = !accessBits[3, 2]; // -C30
 
+            //block0[0, 0] = accessBits[3, 1];
+            //block0[0, 1] = accessBits[7, 2];
+            //block0[0, 2] = accessBits[3, 2];
+
+            //block0[1, 0] = accessBits[3, 0];
+            //block0[1, 1] = accessBits[7, 0];
+            //block0[1, 2] = accessBits[7, 1];
+
             // Block 1
             accessBits[2, 1] = true; // C11
-            accessBits[2, 2] = true; // C31
             accessBits[6, 2] = true; // C21
+            accessBits[2, 2] = true; // C31
 
             accessBits[6, 0] = !accessBits[2, 1]; // -C11
-            accessBits[6, 1] = !accessBits[2, 2]; // -C31
             accessBits[2, 0] = !accessBits[6, 2]; // -C21
+            accessBits[6, 1] = !accessBits[2, 2]; // -C31
+
+            //block1[0, 0] = accessBits[2, 1];
+            //block1[0, 1] = accessBits[2, 2];
+            //block1[0, 2] = accessBits[6, 2];
+
+            //block1[1, 0] = accessBits[6, 0];
+            //block1[1, 1] = accessBits[6, 1];
+            //block1[1, 2] = accessBits[2, 0];
 
             // Block 2
             accessBits[1, 1] = true; // C12
-            accessBits[1, 2] = true; // C32
             accessBits[5, 2] = true; // C22
+            accessBits[1, 2] = true; // C32
 
             accessBits[5, 0] = !accessBits[1, 1]; // -C12
-            accessBits[5, 1] = !accessBits[1, 2]; // -C32
             accessBits[1, 0] = !accessBits[5, 2]; // -C22
+            accessBits[5, 1] = !accessBits[1, 2]; // -C32
+
+            //block2[0, 0] = accessBits[1, 1];
+            //block2[0, 1] = accessBits[1, 2];
+            //block2[0, 2] = accessBits[5, 2];
+
+            //block2[1, 0] = accessBits[5, 0];
+            //block2[1, 1] = accessBits[5, 1];
+            //block2[1, 2] = accessBits[1, 0];
 
             // Sector Trailer
             accessBits[0, 1] = true; // C13
-            accessBits[4, 2] = true; // C33
             accessBits[0, 2] = true; // C23
+            accessBits[4, 2] = true; // C33
 
-            accessBits[0, 0] = !accessBits[4, 2]; // -C33
             accessBits[4, 0] = !accessBits[0, 1]; // -C13
             accessBits[4, 1] = !accessBits[0, 2]; // -C23
+            accessBits[0, 0] = !accessBits[4, 2]; // -C33
+
+            //block3[0, 0] = accessBits[0, 1];
+            //block3[0, 1] = accessBits[4, 2];
+            //block3[0, 2] = accessBits[0, 2];
+
+            //block3[1, 0] = accessBits[0, 0];
+            //block3[1, 1] = accessBits[4, 0];
+            //block3[1, 2] = accessBits[4, 1];
 
             InitializeComponent();
             InitializeTabControl();
@@ -1868,14 +1904,6 @@ namespace MifareCardProg
             UpdateAccessBits(accessBlock1, 2);
             UpdateAccessBits(accessBlock2, 1);
             UpdateAccessBits(accessSectorTrailer, 0);
-
-            for (int i = 0; i < 4; i++)
-            {
-                Debug.WriteLine($"Block 0 Access {i}: {accessBlock0[i]}");
-                Debug.WriteLine($"Block 1 Access {i}: {accessBlock1[i]}");
-                Debug.WriteLine($"Block 2 Access {i}: {accessBlock2[i]}");
-                Debug.WriteLine($"Sector Trailer Access {i}: {accessSectorTrailer[i]}");
-            }
         }
 
         private static void UpdateAccessBitTextBoxes(
@@ -1940,6 +1968,98 @@ namespace MifareCardProg
         {
             UpdateArray();
             UpdateAccessBitTextBoxes(accessBits, accessBitTextBoxes);
+        }
+
+        private void HexToBinaryArray(
+            string hexString,
+            bool[,] accessBits,
+            System.Windows.Forms.TextBox[] textBoxes
+        )
+        {
+            string[] binaryArray = Enumerable
+                .Range(0, hexString.Length / 2)
+                .Select(i =>
+                    Convert
+                        .ToString(Convert.ToInt32(hexString.Substring(i * 2, 2), 16), 2)
+                        .PadLeft(8, '0')
+                )
+                .ToArray();
+
+            for (int i = 0; i < textBoxes.Length && i < binaryArray.Length; i++)
+            {
+                textBoxes[i].Text = binaryArray[i];
+            }
+
+            // Validasi ukuran accessBits
+            if (accessBits.GetLength(0) != 8 || accessBits.GetLength(1) != 3)
+            {
+                MessageBox.Show(
+                    "Array accessBits harus memiliki ukuran [8,3]!",
+                    "Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+                return;
+            }
+
+            for (int row = 0; row < 8; row++)
+            {
+                for (int col = 0; col < 3; col++)
+                {
+                    accessBits[row, col] = binaryArray[col][row] == '1';
+                }
+            }
+
+            Debug.WriteLine("Updated accessBits:");
+            for (int row = 0; row < 8; row++)
+            {
+                Debug.Write("Row " + row + ": ");
+                for (int col = 0; col < 3; col++)
+                {
+                    Debug.Write(accessBits[row, col] ? "1 " : "0 ");
+                }
+            }
+        }
+
+        private static (string, string, string) ConvertToStringTable(string[] rowData)
+        {
+            if (rowData == null || rowData.Length < 3)
+            {
+                return ("0", "0", "0");
+            }
+
+            string c1 = rowData[0].Trim().ToUpper();
+            string c2 = rowData[1].Trim().ToUpper();
+            string c3 = rowData[2].Trim().ToUpper();
+
+            if (c1 == "1" && c2 == "1" && c3 == "1")
+                return ("1", "1", "1"); // 111
+            if (c1 == "1" && c2 == "0" && c3 == "1")
+                return ("1", "0", "1"); // 101
+            if (c1 == "0" && c2 == "1" && c3 == "1")
+                return ("0", "1", "1"); // 011
+            if (c1 == "0" && c2 == "0" && c3 == "1")
+                return ("0", "0", "1"); // 001
+            if (c1 == "1" && c2 == "1" && c3 == "0")
+                return ("1", "1", "0"); // 110
+            if (c1 == "1" && c2 == "0" && c3 == "0")
+                return ("1", "0", "0"); // 100
+            if (c1 == "0" && c2 == "1" && c3 == "0")
+                return ("0", "1", "0"); // 010
+            if (c1 == "0" && c2 == "0" && c3 == "0")
+                return ("0", "0", "0"); // 000
+
+            return ("0", "0", "0"); // Default return
+        }
+
+        private void btnReverseCalc_Click(object sender, EventArgs e)
+        {
+            string hexString = tAB1.Text + tAB2.Text + tAB3.Text;
+            HexToBinaryArray(
+                hexString,
+                accessBits,
+                new System.Windows.Forms.TextBox[] { tAB1, tAB2, tAB3 }
+            );
         }
 
         public class DataBlockCondition

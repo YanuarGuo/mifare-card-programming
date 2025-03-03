@@ -109,6 +109,7 @@ namespace MifareCardProg
             this.tAB1 = new System.Windows.Forms.TextBox();
             this.label9 = new System.Windows.Forms.Label();
             this.btnCalculateAccessBits = new System.Windows.Forms.Button();
+            this.btnReverseCalc = new System.Windows.Forms.Button();
             this.gbLoadKeys.SuspendLayout();
             this.gbAuth.SuspendLayout();
             this.gbKType.SuspendLayout();
@@ -551,7 +552,7 @@ namespace MifareCardProg
             this.gbBinOps.Controls.Add(this.label7);
             this.gbBinOps.Location = new System.Drawing.Point(15, 512);
             this.gbBinOps.Name = "gbBinOps";
-            this.gbBinOps.Size = new System.Drawing.Size(293, 154);
+            this.gbBinOps.Size = new System.Drawing.Size(293, 147);
             this.gbBinOps.TabIndex = 49;
             this.gbBinOps.TabStop = false;
             this.gbBinOps.Text = "Binary Block Functions";
@@ -883,19 +884,30 @@ namespace MifareCardProg
             // 
             // btnCalculateAccessBits
             // 
-            this.btnCalculateAccessBits.Location = new System.Drawing.Point(1180, 267);
+            this.btnCalculateAccessBits.Location = new System.Drawing.Point(1118, 267);
             this.btnCalculateAccessBits.Name = "btnCalculateAccessBits";
-            this.btnCalculateAccessBits.Size = new System.Drawing.Size(99, 23);
+            this.btnCalculateAccessBits.Size = new System.Drawing.Size(161, 23);
             this.btnCalculateAccessBits.TabIndex = 60;
-            this.btnCalculateAccessBits.Text = "Confirm";
+            this.btnCalculateAccessBits.Text = "Convert (Table to Access Bits)";
             this.btnCalculateAccessBits.UseVisualStyleBackColor = true;
             this.btnCalculateAccessBits.Click += new System.EventHandler(this.btnCalculateAccessBits_Click);
+            // 
+            // btnReverseCalc
+            // 
+            this.btnReverseCalc.Location = new System.Drawing.Point(1118, 296);
+            this.btnReverseCalc.Name = "btnReverseCalc";
+            this.btnReverseCalc.Size = new System.Drawing.Size(161, 23);
+            this.btnReverseCalc.TabIndex = 61;
+            this.btnReverseCalc.Text = "Convert (Access Bits to Table)";
+            this.btnReverseCalc.UseVisualStyleBackColor = true;
+            this.btnReverseCalc.Click += new System.EventHandler(this.btnReverseCalc_Click);
             // 
             // MainMifareProg
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1330, 684);
+            this.ClientSize = new System.Drawing.Size(1291, 671);
+            this.Controls.Add(this.btnReverseCalc);
             this.Controls.Add(this.btnCalculateAccessBits);
             this.Controls.Add(this.tAB4);
             this.Controls.Add(this.tAB3);
@@ -1021,6 +1033,7 @@ namespace MifareCardProg
         internal System.Windows.Forms.TextBox tAB1;
         private System.Windows.Forms.Label label9;
         internal System.Windows.Forms.Button btnCalculateAccessBits;
+        internal System.Windows.Forms.Button btnReverseCalc;
     }
 }
 
