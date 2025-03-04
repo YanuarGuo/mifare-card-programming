@@ -25,10 +25,10 @@ namespace MifareCardProg
         private readonly List<string[]> checkedDataBlock1;
         private readonly List<string[]> checkedDataBlock3;
         private readonly List<string[]> checkedSectorTrailer;
-        private bool[,] block0 = new bool[2, 3];
-        private bool[,] block1 = new bool[2, 3];
-        private bool[,] block2 = new bool[2, 3];
-        private bool[,] block3 = new bool[2, 3];
+        private bool[,] block0 = new bool[1, 3];
+        private bool[,] block1 = new bool[1, 3];
+        private bool[,] block2 = new bool[1, 3];
+        private bool[,] block3 = new bool[1, 3];
         public System.Windows.Forms.TextBox[] accessBitTextBoxes;
         private readonly bool[,] accessBits = new bool[8, 3];
         public int retCode,
@@ -63,13 +63,9 @@ namespace MifareCardProg
             accessBits[7, 0] = !accessBits[3, 1]; // -C10
             accessBits[7, 1] = !accessBits[3, 2]; // -C30
 
-            //block0[0, 0] = accessBits[3, 1];
-            //block0[0, 1] = accessBits[7, 2];
-            //block0[0, 2] = accessBits[3, 2];
-
-            //block0[1, 0] = accessBits[3, 0];
-            //block0[1, 1] = accessBits[7, 0];
-            //block0[1, 2] = accessBits[7, 1];
+            block0[0, 0] = accessBits[3, 1];
+            block0[0, 1] = accessBits[7, 2];
+            block0[0, 2] = accessBits[3, 2];
 
             // Block 1
             accessBits[2, 1] = true; // C11
@@ -80,13 +76,9 @@ namespace MifareCardProg
             accessBits[2, 0] = !accessBits[6, 2]; // -C21
             accessBits[6, 1] = !accessBits[2, 2]; // -C31
 
-            //block1[0, 0] = accessBits[2, 1];
-            //block1[0, 1] = accessBits[2, 2];
-            //block1[0, 2] = accessBits[6, 2];
-
-            //block1[1, 0] = accessBits[6, 0];
-            //block1[1, 1] = accessBits[6, 1];
-            //block1[1, 2] = accessBits[2, 0];
+            block1[0, 0] = accessBits[2, 1];
+            block1[0, 1] = accessBits[2, 2];
+            block1[0, 2] = accessBits[6, 2];
 
             // Block 2
             accessBits[1, 1] = true; // C12
@@ -97,13 +89,9 @@ namespace MifareCardProg
             accessBits[1, 0] = !accessBits[5, 2]; // -C22
             accessBits[5, 1] = !accessBits[1, 2]; // -C32
 
-            //block2[0, 0] = accessBits[1, 1];
-            //block2[0, 1] = accessBits[1, 2];
-            //block2[0, 2] = accessBits[5, 2];
-
-            //block2[1, 0] = accessBits[5, 0];
-            //block2[1, 1] = accessBits[5, 1];
-            //block2[1, 2] = accessBits[1, 0];
+            block2[0, 0] = accessBits[1, 1];
+            block2[0, 1] = accessBits[1, 2];
+            block2[0, 2] = accessBits[5, 2];
 
             // Sector Trailer
             accessBits[0, 1] = true; // C13
@@ -114,13 +102,9 @@ namespace MifareCardProg
             accessBits[4, 1] = !accessBits[0, 2]; // -C23
             accessBits[0, 0] = !accessBits[4, 2]; // -C33
 
-            //block3[0, 0] = accessBits[0, 1];
-            //block3[0, 1] = accessBits[4, 2];
-            //block3[0, 2] = accessBits[0, 2];
-
-            //block3[1, 0] = accessBits[0, 0];
-            //block3[1, 1] = accessBits[4, 0];
-            //block3[1, 2] = accessBits[4, 1];
+            block3[0, 0] = accessBits[0, 1];
+            block3[0, 1] = accessBits[4, 2];
+            block3[0, 2] = accessBits[0, 2];
 
             InitializeComponent();
             InitializeTabControl();
@@ -1582,69 +1566,73 @@ namespace MifareCardProg
             accessConditionsBlock0 = new BindingList<DataBlockCondition>
             {
                 new DataBlockCondition(
-                    "0",
-                    "0",
-                    "0",
+                    false,
+                    0,
+                    0,
+                    0,
                     "KEY A | B",
                     "KEY A | B",
                     "KEY A | B",
                     "KEY A | B"
                 ),
-                new DataBlockCondition("0", "1", "0", "KEY A | B", "Never", "Never", "Never"),
-                new DataBlockCondition("1", "0", "0", "KEY A | B", "KEY B", "Never", "Never"),
-                new DataBlockCondition("1", "1", "0", "KEY A | B", "KEY B", "KEY B", "KEY A | B"),
-                new DataBlockCondition("0", "0", "1", "KEY A | B", "Never", "Never", "KEY A | B"),
-                new DataBlockCondition("0", "1", "1", "KEY B", "KEY B", "Never", "Never"),
-                new DataBlockCondition("1", "0", "1", "KEY B", "Never", "Never", "Never"),
-                new DataBlockCondition("1", "1", "1", "Never", "Never", "Never", "Never"),
+                new DataBlockCondition(false, 0, 1, 0, "KEY A | B", "Never", "Never", "Never"),
+                new DataBlockCondition(false, 1, 0, 0, "KEY A | B", "KEY B", "Never", "Never"),
+                new DataBlockCondition(false, 1, 1, 0, "KEY A | B", "KEY B", "KEY B", "KEY A | B"),
+                new DataBlockCondition(false, 0, 0, 1, "KEY A | B", "Never", "Never", "KEY A | B"),
+                new DataBlockCondition(false, 0, 1, 1, "KEY B", "KEY B", "Never", "Never"),
+                new DataBlockCondition(false, 1, 0, 1, "KEY B", "Never", "Never", "Never"),
+                new DataBlockCondition(false, 1, 1, 1, "Never", "Never", "Never", "Never"),
             };
 
             accessConditionsBlock1 = new BindingList<DataBlockCondition>
             {
                 new DataBlockCondition(
-                    "0",
-                    "0",
-                    "0",
+                    false,
+                    0,
+                    0,
+                    0,
                     "KEY A | B",
                     "KEY A | B",
                     "KEY A | B",
                     "KEY A | B"
                 ),
-                new DataBlockCondition("0", "1", "0", "KEY A | B", "Never", "Never", "Never"),
-                new DataBlockCondition("1", "0", "0", "KEY A | B", "KEY B", "Never", "Never"),
-                new DataBlockCondition("1", "1", "0", "KEY A | B", "KEY B", "KEY B", "KEY A | B"),
-                new DataBlockCondition("0", "0", "1", "KEY A | B", "Never", "Never", "KEY A | B"),
-                new DataBlockCondition("0", "1", "1", "KEY B", "KEY B", "Never", "Never"),
-                new DataBlockCondition("1", "0", "1", "KEY B", "Never", "Never", "Never"),
-                new DataBlockCondition("1", "1", "1", "Never", "Never", "Never", "Never"),
+                new DataBlockCondition(false, 0, 1, 0, "KEY A | B", "Never", "Never", "Never"),
+                new DataBlockCondition(false, 1, 0, 0, "KEY A | B", "KEY B", "Never", "Never"),
+                new DataBlockCondition(false, 1, 1, 0, "KEY A | B", "KEY B", "KEY B", "KEY A | B"),
+                new DataBlockCondition(false, 0, 0, 1, "KEY A | B", "Never", "Never", "KEY A | B"),
+                new DataBlockCondition(false, 0, 1, 1, "KEY B", "KEY B", "Never", "Never"),
+                new DataBlockCondition(false, 1, 0, 1, "KEY B", "Never", "Never", "Never"),
+                new DataBlockCondition(false, 1, 1, 1, "Never", "Never", "Never", "Never"),
             };
 
             accessConditionsBlock2 = new BindingList<DataBlockCondition>
             {
                 new DataBlockCondition(
-                    "0",
-                    "0",
-                    "0",
+                    false,
+                    0,
+                    0,
+                    0,
                     "KEY A | B",
                     "KEY A | B",
                     "KEY A | B",
                     "KEY A | B"
                 ),
-                new DataBlockCondition("0", "1", "0", "KEY A | B", "Never", "Never", "Never"),
-                new DataBlockCondition("1", "0", "0", "KEY A | B", "KEY B", "Never", "Never"),
-                new DataBlockCondition("1", "1", "0", "KEY A | B", "KEY B", "KEY B", "KEY A | B"),
-                new DataBlockCondition("0", "0", "1", "KEY A | B", "Never", "Never", "KEY A | B"),
-                new DataBlockCondition("0", "1", "1", "KEY B", "KEY B", "Never", "Never"),
-                new DataBlockCondition("1", "0", "1", "KEY B", "Never", "Never", "Never"),
-                new DataBlockCondition("1", "1", "1", "Never", "Never", "Never", "Never"),
+                new DataBlockCondition(false, 0, 1, 0, "KEY A | B", "Never", "Never", "Never"),
+                new DataBlockCondition(false, 1, 0, 0, "KEY A | B", "KEY B", "Never", "Never"),
+                new DataBlockCondition(false, 1, 1, 0, "KEY A | B", "KEY B", "KEY B", "KEY A | B"),
+                new DataBlockCondition(false, 0, 0, 1, "KEY A | B", "Never", "Never", "KEY A | B"),
+                new DataBlockCondition(false, 0, 1, 1, "KEY B", "KEY B", "Never", "Never"),
+                new DataBlockCondition(false, 1, 0, 1, "KEY B", "Never", "Never", "Never"),
+                new DataBlockCondition(false, 1, 1, 1, "Never", "Never", "Never", "Never"),
             };
 
             accessConditionsST = new BindingList<SectorTrailerCondition>
             {
                 new SectorTrailerCondition(
-                    "0",
-                    "0",
-                    "0",
+                    false,
+                    0,
+                    0,
+                    0,
                     "Never",
                     "KEY A",
                     "KEY A",
@@ -1653,9 +1641,10 @@ namespace MifareCardProg
                     "KEY A"
                 ),
                 new SectorTrailerCondition(
-                    "0",
-                    "1",
-                    "0",
+                    false,
+                    0,
+                    1,
+                    0,
                     "Never",
                     "Never",
                     "KEY A",
@@ -1664,9 +1653,10 @@ namespace MifareCardProg
                     "Never"
                 ),
                 new SectorTrailerCondition(
-                    "1",
-                    "0",
-                    "0",
+                    false,
+                    1,
+                    0,
+                    0,
                     "Never",
                     "KEY B",
                     "KEY A | B",
@@ -1675,9 +1665,10 @@ namespace MifareCardProg
                     "KEY B"
                 ),
                 new SectorTrailerCondition(
-                    "1",
-                    "1",
-                    "0",
+                    false,
+                    1,
+                    1,
+                    0,
                     "Never",
                     "Never",
                     "KEY A | B",
@@ -1686,9 +1677,10 @@ namespace MifareCardProg
                     "Never"
                 ),
                 new SectorTrailerCondition(
-                    "0",
-                    "0",
-                    "1",
+                    false,
+                    0,
+                    0,
+                    1,
                     "Never",
                     "KEY A",
                     "KEY A",
@@ -1697,9 +1689,10 @@ namespace MifareCardProg
                     "KEY A"
                 ),
                 new SectorTrailerCondition(
-                    "0",
-                    "1",
-                    "1",
+                    false,
+                    0,
+                    1,
+                    1,
                     "Never",
                     "KEY B",
                     "KEY A | B",
@@ -1708,9 +1701,10 @@ namespace MifareCardProg
                     "KEY B"
                 ),
                 new SectorTrailerCondition(
-                    "1",
-                    "0",
-                    "1",
+                    false,
+                    1,
+                    0,
+                    1,
                     "Never",
                     "Never",
                     "KEY A | B",
@@ -1719,9 +1713,10 @@ namespace MifareCardProg
                     "Never"
                 ),
                 new SectorTrailerCondition(
-                    "1",
-                    "1",
-                    "1",
+                    false,
+                    1,
+                    1,
+                    1,
                     "Never",
                     "Never",
                     "KEY A | B",
@@ -1749,22 +1744,27 @@ namespace MifareCardProg
         )
         {
             dgvDataBlock.Dock = DockStyle.Fill;
-            dgvDataBlock.DataSource = new BindingList<DataBlockCondition>(conditions);
+            dgvDataBlock.DataSource = conditions;
             dgvDataBlock.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
             dgvDataBlock.AllowUserToAddRows = false;
             dgvDataBlock.ReadOnly = true;
 
             if (dgvDataBlock.Columns["IsSelected"] != null)
-                dgvDataBlock.Columns["IsSelected"].Visible = true;
-
-            DataGridViewCheckBoxColumn radioColumn = new DataGridViewCheckBoxColumn
             {
-                HeaderText = "",
-                DataPropertyName = "IsSelected",
-                Width = 30,
-                ReadOnly = false,
-            };
-            dgvDataBlock.Columns.Insert(0, radioColumn);
+                dgvDataBlock.Columns["IsSelected"].Visible = true;
+            }
+            else
+            {
+                DataGridViewCheckBoxColumn radioColumn = new DataGridViewCheckBoxColumn
+                {
+                    Name = "IsSelected",
+                    HeaderText = "Selected",
+                    DataPropertyName = "IsSelected",
+                    Width = 50,
+                    ReadOnly = false,
+                };
+                dgvDataBlock.Columns.Insert(0, radioColumn);
+            }
 
             dgvDataBlock.CellClick += (sender, e) =>
             {
@@ -1796,16 +1796,21 @@ namespace MifareCardProg
             dgvSectorTrailer.ReadOnly = true;
 
             if (dgvSectorTrailer.Columns["IsSelected"] != null)
-                dgvSectorTrailer.Columns["IsSelected"].Visible = true;
-
-            DataGridViewCheckBoxColumn radioColumn = new DataGridViewCheckBoxColumn
             {
-                HeaderText = "",
-                DataPropertyName = "IsSelected",
-                Width = 30,
-                ReadOnly = false,
-            };
-            dgvSectorTrailer.Columns.Insert(0, radioColumn);
+                dgvSectorTrailer.Columns["IsSelected"].Visible = true;
+            }
+            else
+            {
+                DataGridViewCheckBoxColumn radioColumn = new DataGridViewCheckBoxColumn
+                {
+                    Name = "IsSelected",
+                    HeaderText = "Selected",
+                    DataPropertyName = "IsSelected",
+                    Width = 50,
+                    ReadOnly = false,
+                };
+                dgvSectorTrailer.Columns.Insert(0, radioColumn);
+            }
 
             dgvSectorTrailer.CellClick += (sender, e) =>
             {
@@ -1928,6 +1933,18 @@ namespace MifareCardProg
                 accessBitTextBoxes[col].Text = value.ToString("X2");
                 accessBitTextBoxes[3].Text = "69";
             }
+            Debug.Write("| c10: " + accessBits[3, 1] + " ");
+            Debug.Write("| c20: " + accessBits[7, 2] + " ");
+            Debug.Write("| c30: " + accessBits[3, 2] + " |");
+            Debug.Write("| c11: " + accessBits[2, 1] + " ");
+            Debug.Write("| c21: " + accessBits[6, 2] + " ");
+            Debug.Write("| c31: " + accessBits[2, 2] + " |");
+            Debug.Write("| c12: " + accessBits[1, 1] + " ");
+            Debug.Write("| c22: " + accessBits[1, 2] + " ");
+            Debug.Write("| c32: " + accessBits[5, 2] + " |");
+            Debug.Write("| c13: " + accessBits[0, 1] + " ");
+            Debug.Write("| c23: " + accessBits[0, 2] + " ");
+            Debug.Write("| c33: " + accessBits[4, 2] + " |");
         }
 
         private List<string[]> GetCheckedRows(DataGridView dgv)
@@ -1960,7 +1977,6 @@ namespace MifareCardProg
                 }
             }
 
-            Trace.WriteLine($"Checked Rows Count: {checkedRows.Count}");
             return checkedRows;
         }
 
@@ -2010,46 +2026,115 @@ namespace MifareCardProg
                 }
             }
 
-            Debug.WriteLine("Updated accessBits:");
-            for (int row = 0; row < 8; row++)
-            {
-                Debug.Write("Row " + row + ": ");
-                for (int col = 0; col < 3; col++)
-                {
-                    Debug.Write(accessBits[row, col] ? "1 " : "0 ");
-                }
-            }
+            Debug.Write("| c10: " + accessBits[3, 1] + " ");
+            Debug.Write("| c20: " + accessBits[7, 2] + " ");
+            Debug.Write("| c30: " + accessBits[3, 2] + " |");
+            Debug.Write("| c11: " + accessBits[2, 1] + " ");
+            Debug.Write("| c21: " + accessBits[6, 2] + " ");
+            Debug.Write("| c31: " + accessBits[2, 2] + " |");
+            Debug.Write("| c12: " + accessBits[1, 1] + " ");
+            Debug.Write("| c22: " + accessBits[1, 2] + " ");
+            Debug.Write("| c32: " + accessBits[5, 2] + " |");
+            Debug.Write("| c13: " + accessBits[0, 1] + " ");
+            Debug.Write("| c23: " + accessBits[0, 2] + " ");
+            Debug.Write("| c33: " + accessBits[4, 2] + " |");
         }
 
-        private static (string, string, string) ConvertToStringTable(string[] rowData)
+        //Auto Click belum bisa
+        private void AutoClickCheckBoxes(bool[,] accessBits)
         {
-            if (rowData == null || rowData.Length < 3)
+            //Console.WriteLine("called");
+            //for (int i = 0; i < accessBits.GetLength(0); i++)
+            //{
+            //    Console.Write($"Row {i}: ");
+            //    for (int j = 0; j < 3; j++)
+            //    {
+            //        Console.Write(accessBits[i, j] ? "1 " : "0 ");
+            //    }
+            //    Console.WriteLine();
+            //}
+
+            List<BindingList<DataBlockCondition>> blockLists = new List<
+                BindingList<DataBlockCondition>
+            >()
             {
-                return ("0", "0", "0");
+                accessConditionsBlock0,
+                accessConditionsBlock1,
+                accessConditionsBlock2,
+            };
+
+            List<DataGridView> dgvList = new List<DataGridView>()
+            {
+                dgvDataBlock0,
+                dgvDataBlock1,
+                dgvDataBlock2,
+            };
+
+            BindingList<SectorTrailerCondition> sectorTrailerList = accessConditionsST;
+
+            int maxRows = accessBits.GetLength(0);
+
+            for (int i = 0; i < blockLists.Count; i++)
+            {
+                BindingList<DataBlockCondition> conditions = blockLists[i];
+
+                for (int row = 0; row < conditions.Count && row < maxRows; row++)
+                {
+                    int c1 = accessBits[row, 0] ? 1 : 0;
+                    int c2 = accessBits[row, 1] ? 1 : 0;
+                    int c3 = accessBits[row, 2] ? 1 : 0;
+
+                    bool isMatch = (
+                        conditions[row].C1 == c1
+                        && conditions[row].C2 == c2
+                        && conditions[row].C3 == c3
+                    );
+                    conditions[row].IsSelected = isMatch;
+
+                    // Pastikan DataGridView memiliki kolom "IsSelected"
+                    if (dgvList[i].Columns.Contains("IsSelected"))
+                    {
+                        dgvList[i].Rows[row].Cells["IsSelected"].Value = isMatch;
+                    }
+                    if (
+                        conditions[row].C1 == c1
+                        && conditions[row].C2 == c2
+                        && conditions[row].C3 == c3
+                    )
+                    {
+                        Console.WriteLine($"Row {row} matched! Setting IsSelected to true");
+                        conditions[row].IsSelected = true;
+                    }
+                    else
+                    {
+                        conditions[row].IsSelected = false;
+                    }
+                }
+
+                dgvList[i].Refresh();
+                dgvList[i].Invalidate();
             }
 
-            string c1 = rowData[0].Trim().ToUpper();
-            string c2 = rowData[1].Trim().ToUpper();
-            string c3 = rowData[2].Trim().ToUpper();
+            for (int row = 0; row < sectorTrailerList.Count && row < maxRows; row++)
+            {
+                int c1 = accessBits[row, 0] ? 1 : 0;
+                int c2 = accessBits[row, 1] ? 1 : 0;
+                int c3 = accessBits[row, 2] ? 1 : 0;
 
-            if (c1 == "1" && c2 == "1" && c3 == "1")
-                return ("1", "1", "1"); // 111
-            if (c1 == "1" && c2 == "0" && c3 == "1")
-                return ("1", "0", "1"); // 101
-            if (c1 == "0" && c2 == "1" && c3 == "1")
-                return ("0", "1", "1"); // 011
-            if (c1 == "0" && c2 == "0" && c3 == "1")
-                return ("0", "0", "1"); // 001
-            if (c1 == "1" && c2 == "1" && c3 == "0")
-                return ("1", "1", "0"); // 110
-            if (c1 == "1" && c2 == "0" && c3 == "0")
-                return ("1", "0", "0"); // 100
-            if (c1 == "0" && c2 == "1" && c3 == "0")
-                return ("0", "1", "0"); // 010
-            if (c1 == "0" && c2 == "0" && c3 == "0")
-                return ("0", "0", "0"); // 000
+                bool isMatch = (
+                    sectorTrailerList[row].C1 == c1
+                    && sectorTrailerList[row].C2 == c2
+                    && sectorTrailerList[row].C3 == c3
+                );
+                sectorTrailerList[row].IsSelected = isMatch;
 
-            return ("0", "0", "0"); // Default return
+                if (dgvSectorTrailer.Columns.Contains("IsSelected"))
+                {
+                    dgvSectorTrailer.Rows[row].Cells["IsSelected"].Value = isMatch;
+                }
+            }
+
+            dgvSectorTrailer.Refresh();
         }
 
         private void btnReverseCalc_Click(object sender, EventArgs e)
@@ -2060,52 +2145,81 @@ namespace MifareCardProg
                 accessBits,
                 new System.Windows.Forms.TextBox[] { tAB1, tAB2, tAB3 }
             );
+            AutoClickCheckBoxes(accessBits);
         }
 
-        public class DataBlockCondition
+        public class DataBlockCondition : INotifyPropertyChanged
         {
-            private static readonly string c1;
-            private static readonly string c2;
-            private static readonly string c3;
-            public bool IsSelected { get; set; }
-            public string C1 { get; set; } = c1;
-            public string C2 { get; set; } = c2;
-            public string C3 { get; set; } = c3;
+            private bool isSelected;
+            public bool IsSelected
+            {
+                get => isSelected;
+                set
+                {
+                    if (isSelected != value)
+                    {
+                        isSelected = value;
+                        OnPropertyChanged(nameof(IsSelected));
+                    }
+                }
+            }
+
+            public int C1 { get; set; }
+            public int C2 { get; set; }
+            public int C3 { get; set; }
             public string Read { get; set; }
             public string Write { get; set; }
             public string Increment { get; set; }
             public string DecTransferRestore { get; set; }
 
             public DataBlockCondition(
-                string c1,
-                string c2,
-                string c3,
+                bool isSelected,
+                int c1,
+                int c2,
+                int c3,
                 string read,
                 string write,
                 string increment,
                 string decTransferRestore
             )
             {
+                IsSelected = isSelected;
                 C1 = c1;
                 C2 = c2;
                 C3 = c3;
-                IsSelected = false;
                 Read = read;
                 Write = write;
                 Increment = increment;
                 DecTransferRestore = decTransferRestore;
             }
+
+            public event PropertyChangedEventHandler PropertyChanged;
+
+            protected void OnPropertyChanged(string propertyName)
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            }
         }
 
-        public class SectorTrailerCondition
+        public class SectorTrailerCondition : INotifyPropertyChanged
         {
-            private static readonly string c1;
-            private static readonly string c2;
-            private static readonly string c3;
-            public bool IsSelected { get; set; }
-            public string C1 { get; set; } = c1;
-            public string C2 { get; set; } = c2;
-            public string C3 { get; set; } = c3;
+            private bool isSelected;
+            public bool IsSelected
+            {
+                get => isSelected;
+                set
+                {
+                    if (isSelected != value)
+                    {
+                        isSelected = value;
+                        OnPropertyChanged(nameof(IsSelected));
+                    }
+                }
+            }
+
+            public int C1 { get; set; }
+            public int C2 { get; set; }
+            public int C3 { get; set; }
             public string KeyARead { get; set; }
             public string KeyAWrite { get; set; }
             public string AccessBitRead { get; set; }
@@ -2114,9 +2228,10 @@ namespace MifareCardProg
             public string KeyBWrite { get; set; }
 
             public SectorTrailerCondition(
-                string c1,
-                string c2,
-                string c3,
+                bool isSelected,
+                int c1,
+                int c2,
+                int c3,
                 string keyARead,
                 string keyAWrite,
                 string accessBitRead,
@@ -2125,16 +2240,23 @@ namespace MifareCardProg
                 string keyBWrite
             )
             {
+                IsSelected = isSelected;
                 C1 = c1;
                 C2 = c2;
                 C3 = c3;
-                IsSelected = false;
                 KeyARead = keyARead;
                 KeyAWrite = keyAWrite;
                 AccessBitRead = accessBitRead;
                 AccessBitWrite = accessBitWrite;
                 KeyBRead = keyBRead;
                 KeyBWrite = keyBWrite;
+            }
+
+            public event PropertyChangedEventHandler PropertyChanged;
+
+            protected void OnPropertyChanged(string propertyName)
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
             }
         }
     }
