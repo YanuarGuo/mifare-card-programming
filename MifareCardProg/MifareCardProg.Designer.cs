@@ -109,7 +109,6 @@ namespace MifareCardProg
             this.tAB1 = new System.Windows.Forms.TextBox();
             this.label9 = new System.Windows.Forms.Label();
             this.btnCalculateAccessBits = new System.Windows.Forms.Button();
-            this.btnReverseCalc = new System.Windows.Forms.Button();
             this.gbLoadKeys.SuspendLayout();
             this.gbAuth.SuspendLayout();
             this.gbKType.SuspendLayout();
@@ -816,7 +815,7 @@ namespace MifareCardProg
             this.tpBlock1.Location = new System.Drawing.Point(4, 22);
             this.tpBlock1.Name = "tpBlock1";
             this.tpBlock1.Padding = new System.Windows.Forms.Padding(3);
-            this.tpBlock1.Size = new System.Drawing.Size(392, 207);
+            this.tpBlock1.Size = new System.Drawing.Size(528, 207);
             this.tpBlock1.TabIndex = 1;
             this.tpBlock1.Text = "Data Block 1";
             this.tpBlock1.UseVisualStyleBackColor = true;
@@ -826,7 +825,7 @@ namespace MifareCardProg
             this.tpBlock2.Location = new System.Drawing.Point(4, 22);
             this.tpBlock2.Name = "tpBlock2";
             this.tpBlock2.Padding = new System.Windows.Forms.Padding(3);
-            this.tpBlock2.Size = new System.Drawing.Size(392, 207);
+            this.tpBlock2.Size = new System.Drawing.Size(528, 207);
             this.tpBlock2.TabIndex = 2;
             this.tpBlock2.Text = "Data Block 2";
             this.tpBlock2.UseVisualStyleBackColor = true;
@@ -836,7 +835,7 @@ namespace MifareCardProg
             this.tpST.Location = new System.Drawing.Point(4, 22);
             this.tpST.Name = "tpST";
             this.tpST.Padding = new System.Windows.Forms.Padding(3);
-            this.tpST.Size = new System.Drawing.Size(392, 207);
+            this.tpST.Size = new System.Drawing.Size(528, 207);
             this.tpST.TabIndex = 3;
             this.tpST.Text = "Sector Trailer";
             this.tpST.UseVisualStyleBackColor = true;
@@ -884,30 +883,19 @@ namespace MifareCardProg
             // 
             // btnCalculateAccessBits
             // 
-            this.btnCalculateAccessBits.Location = new System.Drawing.Point(1118, 267);
+            this.btnCalculateAccessBits.Location = new System.Drawing.Point(1179, 267);
             this.btnCalculateAccessBits.Name = "btnCalculateAccessBits";
-            this.btnCalculateAccessBits.Size = new System.Drawing.Size(161, 23);
+            this.btnCalculateAccessBits.Size = new System.Drawing.Size(100, 23);
             this.btnCalculateAccessBits.TabIndex = 60;
-            this.btnCalculateAccessBits.Text = "Convert (Table to Access Bits)";
+            this.btnCalculateAccessBits.Text = "Convert";
             this.btnCalculateAccessBits.UseVisualStyleBackColor = true;
             this.btnCalculateAccessBits.Click += new System.EventHandler(this.btnCalculateAccessBits_Click);
-            // 
-            // btnReverseCalc
-            // 
-            this.btnReverseCalc.Location = new System.Drawing.Point(1118, 296);
-            this.btnReverseCalc.Name = "btnReverseCalc";
-            this.btnReverseCalc.Size = new System.Drawing.Size(161, 23);
-            this.btnReverseCalc.TabIndex = 61;
-            this.btnReverseCalc.Text = "Convert (Access Bits to Table)";
-            this.btnReverseCalc.UseVisualStyleBackColor = true;
-            this.btnReverseCalc.Click += new System.EventHandler(this.btnReverseCalc_Click);
             // 
             // MainMifareProg
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1291, 671);
-            this.Controls.Add(this.btnReverseCalc);
             this.Controls.Add(this.btnCalculateAccessBits);
             this.Controls.Add(this.tAB4);
             this.Controls.Add(this.tAB3);
@@ -1033,7 +1021,6 @@ namespace MifareCardProg
         internal System.Windows.Forms.TextBox tAB1;
         private System.Windows.Forms.Label label9;
         internal System.Windows.Forms.Button btnCalculateAccessBits;
-        internal System.Windows.Forms.Button btnReverseCalc;
     }
 }
 

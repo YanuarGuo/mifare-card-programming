@@ -25,10 +25,10 @@ namespace MifareCardProg
         private readonly List<string[]> checkedDataBlock1;
         private readonly List<string[]> checkedDataBlock3;
         private readonly List<string[]> checkedSectorTrailer;
-        private bool[,] block0 = new bool[1, 3];
-        private bool[,] block1 = new bool[1, 3];
-        private bool[,] block2 = new bool[1, 3];
-        private bool[,] block3 = new bool[1, 3];
+        private readonly bool[,] block0 = new bool[1, 3];
+        private readonly bool[,] block1 = new bool[1, 3];
+        private readonly bool[,] block2 = new bool[1, 3];
+        private readonly bool[,] block3 = new bool[1, 3];
         public System.Windows.Forms.TextBox[] accessBitTextBoxes;
         private readonly bool[,] accessBits = new bool[8, 3];
         public int retCode,
@@ -1933,18 +1933,6 @@ namespace MifareCardProg
                 accessBitTextBoxes[col].Text = value.ToString("X2");
                 accessBitTextBoxes[3].Text = "69";
             }
-            Debug.Write("| c10: " + accessBits[3, 1] + " ");
-            Debug.Write("| c20: " + accessBits[7, 2] + " ");
-            Debug.Write("| c30: " + accessBits[3, 2] + " |");
-            Debug.Write("| c11: " + accessBits[2, 1] + " ");
-            Debug.Write("| c21: " + accessBits[6, 2] + " ");
-            Debug.Write("| c31: " + accessBits[2, 2] + " |");
-            Debug.Write("| c12: " + accessBits[1, 1] + " ");
-            Debug.Write("| c22: " + accessBits[1, 2] + " ");
-            Debug.Write("| c32: " + accessBits[5, 2] + " |");
-            Debug.Write("| c13: " + accessBits[0, 1] + " ");
-            Debug.Write("| c23: " + accessBits[0, 2] + " ");
-            Debug.Write("| c33: " + accessBits[4, 2] + " |");
         }
 
         private List<string[]> GetCheckedRows(DataGridView dgv)
@@ -1986,183 +1974,9 @@ namespace MifareCardProg
             UpdateAccessBitTextBoxes(accessBits, accessBitTextBoxes);
         }
 
-        private void HexToBinaryArray(
-            string hexString,
-            bool[,] accessBits,
-            System.Windows.Forms.TextBox[] textBoxes
-        )
+        public class DataBlockCondition
         {
-            string[] binaryArray = Enumerable
-                .Range(0, hexString.Length / 2)
-                .Select(i =>
-                    Convert
-                        .ToString(Convert.ToInt32(hexString.Substring(i * 2, 2), 16), 2)
-                        .PadLeft(8, '0')
-                )
-                .ToArray();
-
-            for (int i = 0; i < textBoxes.Length && i < binaryArray.Length; i++)
-            {
-                textBoxes[i].Text = binaryArray[i];
-            }
-
-            // Validasi ukuran accessBits
-            if (accessBits.GetLength(0) != 8 || accessBits.GetLength(1) != 3)
-            {
-                MessageBox.Show(
-                    "Array accessBits harus memiliki ukuran [8,3]!",
-                    "Error",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error
-                );
-                return;
-            }
-
-            for (int row = 0; row < 8; row++)
-            {
-                for (int col = 0; col < 3; col++)
-                {
-                    accessBits[row, col] = binaryArray[col][row] == '1';
-                }
-            }
-
-            Debug.Write("| c10: " + accessBits[3, 1] + " ");
-            Debug.Write("| c20: " + accessBits[7, 2] + " ");
-            Debug.Write("| c30: " + accessBits[3, 2] + " |");
-            Debug.Write("| c11: " + accessBits[2, 1] + " ");
-            Debug.Write("| c21: " + accessBits[6, 2] + " ");
-            Debug.Write("| c31: " + accessBits[2, 2] + " |");
-            Debug.Write("| c12: " + accessBits[1, 1] + " ");
-            Debug.Write("| c22: " + accessBits[1, 2] + " ");
-            Debug.Write("| c32: " + accessBits[5, 2] + " |");
-            Debug.Write("| c13: " + accessBits[0, 1] + " ");
-            Debug.Write("| c23: " + accessBits[0, 2] + " ");
-            Debug.Write("| c33: " + accessBits[4, 2] + " |");
-        }
-
-        //Auto Click belum bisa
-        private void AutoClickCheckBoxes(bool[,] accessBits)
-        {
-            //Console.WriteLine("called");
-            //for (int i = 0; i < accessBits.GetLength(0); i++)
-            //{
-            //    Console.Write($"Row {i}: ");
-            //    for (int j = 0; j < 3; j++)
-            //    {
-            //        Console.Write(accessBits[i, j] ? "1 " : "0 ");
-            //    }
-            //    Console.WriteLine();
-            //}
-
-            List<BindingList<DataBlockCondition>> blockLists = new List<
-                BindingList<DataBlockCondition>
-            >()
-            {
-                accessConditionsBlock0,
-                accessConditionsBlock1,
-                accessConditionsBlock2,
-            };
-
-            List<DataGridView> dgvList = new List<DataGridView>()
-            {
-                dgvDataBlock0,
-                dgvDataBlock1,
-                dgvDataBlock2,
-            };
-
-            BindingList<SectorTrailerCondition> sectorTrailerList = accessConditionsST;
-
-            int maxRows = accessBits.GetLength(0);
-
-            for (int i = 0; i < blockLists.Count; i++)
-            {
-                BindingList<DataBlockCondition> conditions = blockLists[i];
-
-                for (int row = 0; row < conditions.Count && row < maxRows; row++)
-                {
-                    int c1 = accessBits[row, 0] ? 1 : 0;
-                    int c2 = accessBits[row, 1] ? 1 : 0;
-                    int c3 = accessBits[row, 2] ? 1 : 0;
-
-                    bool isMatch = (
-                        conditions[row].C1 == c1
-                        && conditions[row].C2 == c2
-                        && conditions[row].C3 == c3
-                    );
-                    conditions[row].IsSelected = isMatch;
-
-                    // Pastikan DataGridView memiliki kolom "IsSelected"
-                    if (dgvList[i].Columns.Contains("IsSelected"))
-                    {
-                        dgvList[i].Rows[row].Cells["IsSelected"].Value = isMatch;
-                    }
-                    if (
-                        conditions[row].C1 == c1
-                        && conditions[row].C2 == c2
-                        && conditions[row].C3 == c3
-                    )
-                    {
-                        Console.WriteLine($"Row {row} matched! Setting IsSelected to true");
-                        conditions[row].IsSelected = true;
-                    }
-                    else
-                    {
-                        conditions[row].IsSelected = false;
-                    }
-                }
-
-                dgvList[i].Refresh();
-                dgvList[i].Invalidate();
-            }
-
-            for (int row = 0; row < sectorTrailerList.Count && row < maxRows; row++)
-            {
-                int c1 = accessBits[row, 0] ? 1 : 0;
-                int c2 = accessBits[row, 1] ? 1 : 0;
-                int c3 = accessBits[row, 2] ? 1 : 0;
-
-                bool isMatch = (
-                    sectorTrailerList[row].C1 == c1
-                    && sectorTrailerList[row].C2 == c2
-                    && sectorTrailerList[row].C3 == c3
-                );
-                sectorTrailerList[row].IsSelected = isMatch;
-
-                if (dgvSectorTrailer.Columns.Contains("IsSelected"))
-                {
-                    dgvSectorTrailer.Rows[row].Cells["IsSelected"].Value = isMatch;
-                }
-            }
-
-            dgvSectorTrailer.Refresh();
-        }
-
-        private void btnReverseCalc_Click(object sender, EventArgs e)
-        {
-            string hexString = tAB1.Text + tAB2.Text + tAB3.Text;
-            HexToBinaryArray(
-                hexString,
-                accessBits,
-                new System.Windows.Forms.TextBox[] { tAB1, tAB2, tAB3 }
-            );
-            AutoClickCheckBoxes(accessBits);
-        }
-
-        public class DataBlockCondition : INotifyPropertyChanged
-        {
-            private bool isSelected;
-            public bool IsSelected
-            {
-                get => isSelected;
-                set
-                {
-                    if (isSelected != value)
-                    {
-                        isSelected = value;
-                        OnPropertyChanged(nameof(IsSelected));
-                    }
-                }
-            }
+            public bool IsSelected { get; set; }
 
             public int C1 { get; set; }
             public int C2 { get; set; }
@@ -2192,31 +2006,11 @@ namespace MifareCardProg
                 Increment = increment;
                 DecTransferRestore = decTransferRestore;
             }
-
-            public event PropertyChangedEventHandler PropertyChanged;
-
-            protected void OnPropertyChanged(string propertyName)
-            {
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-            }
         }
 
-        public class SectorTrailerCondition : INotifyPropertyChanged
+        public class SectorTrailerCondition
         {
-            private bool isSelected;
-            public bool IsSelected
-            {
-                get => isSelected;
-                set
-                {
-                    if (isSelected != value)
-                    {
-                        isSelected = value;
-                        OnPropertyChanged(nameof(IsSelected));
-                    }
-                }
-            }
-
+            public bool IsSelected { get; set; }
             public int C1 { get; set; }
             public int C2 { get; set; }
             public int C3 { get; set; }
@@ -2250,13 +2044,6 @@ namespace MifareCardProg
                 AccessBitWrite = accessBitWrite;
                 KeyBRead = keyBRead;
                 KeyBWrite = keyBWrite;
-            }
-
-            public event PropertyChangedEventHandler PropertyChanged;
-
-            protected void OnPropertyChanged(string propertyName)
-            {
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
             }
         }
     }
