@@ -98,6 +98,21 @@ namespace MifareCardProg
             this.label10 = new System.Windows.Forms.Label();
             this.bReadAll = new System.Windows.Forms.Button();
             this.dReadAll = new System.Windows.Forms.DataGridView();
+            this.ProfilePict = new System.Windows.Forms.PictureBox();
+            this.label9 = new System.Windows.Forms.Label();
+            this.label15 = new System.Windows.Forms.Label();
+            this.label16 = new System.Windows.Forms.Label();
+            this.label17 = new System.Windows.Forms.Label();
+            this.gbProfileCard = new System.Windows.Forms.GroupBox();
+            this.BtnReset = new System.Windows.Forms.Button();
+            this.BtnConfirm = new System.Windows.Forms.Button();
+            this.lblAddPhoto = new System.Windows.Forms.Label();
+            this.TxtNumber = new System.Windows.Forms.TextBox();
+            this.TxtAddress = new System.Windows.Forms.TextBox();
+            this.TxtGender = new System.Windows.Forms.TextBox();
+            this.TxtBirthDate = new System.Windows.Forms.TextBox();
+            this.TxtName = new System.Windows.Forms.TextBox();
+            this.label18 = new System.Windows.Forms.Label();
             this.gbLoadKeys.SuspendLayout();
             this.gbAuth.SuspendLayout();
             this.gbKType.SuspendLayout();
@@ -105,6 +120,8 @@ namespace MifareCardProg
             this.gbBinOps.SuspendLayout();
             this.gbValBlk.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dReadAll)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.ProfilePict)).BeginInit();
+            this.gbProfileCard.SuspendLayout();
             this.SuspendLayout();
             // 
             // Label1
@@ -776,11 +793,160 @@ namespace MifareCardProg
             this.dReadAll.Size = new System.Drawing.Size(385, 222);
             this.dReadAll.TabIndex = 52;
             // 
+            // ProfilePict
+            // 
+            this.ProfilePict.Location = new System.Drawing.Point(116, 19);
+            this.ProfilePict.Name = "ProfilePict";
+            this.ProfilePict.Size = new System.Drawing.Size(100, 120);
+            this.ProfilePict.TabIndex = 53;
+            this.ProfilePict.TabStop = false;
+            this.ProfilePict.Click += new System.EventHandler(this.ProfilePict_Click);
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(14, 239);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(45, 13);
+            this.label9.TabIndex = 57;
+            this.label9.Text = "Address";
+            // 
+            // label15
+            // 
+            this.label15.AutoSize = true;
+            this.label15.Location = new System.Drawing.Point(14, 215);
+            this.label15.Name = "label15";
+            this.label15.Size = new System.Drawing.Size(42, 13);
+            this.label15.TabIndex = 56;
+            this.label15.Text = "Gender";
+            // 
+            // label16
+            // 
+            this.label16.AutoSize = true;
+            this.label16.Location = new System.Drawing.Point(14, 187);
+            this.label16.Name = "label16";
+            this.label16.Size = new System.Drawing.Size(66, 13);
+            this.label16.TabIndex = 55;
+            this.label16.Text = "Date of Birth";
+            // 
+            // label17
+            // 
+            this.label17.AutoSize = true;
+            this.label17.Location = new System.Drawing.Point(14, 162);
+            this.label17.Name = "label17";
+            this.label17.Size = new System.Drawing.Size(54, 13);
+            this.label17.TabIndex = 54;
+            this.label17.Text = "Full Name";
+            // 
+            // gbProfileCard
+            // 
+            this.gbProfileCard.Controls.Add(this.BtnReset);
+            this.gbProfileCard.Controls.Add(this.BtnConfirm);
+            this.gbProfileCard.Controls.Add(this.lblAddPhoto);
+            this.gbProfileCard.Controls.Add(this.TxtNumber);
+            this.gbProfileCard.Controls.Add(this.TxtAddress);
+            this.gbProfileCard.Controls.Add(this.TxtGender);
+            this.gbProfileCard.Controls.Add(this.TxtBirthDate);
+            this.gbProfileCard.Controls.Add(this.TxtName);
+            this.gbProfileCard.Controls.Add(this.label18);
+            this.gbProfileCard.Controls.Add(this.label15);
+            this.gbProfileCard.Controls.Add(this.ProfilePict);
+            this.gbProfileCard.Controls.Add(this.label9);
+            this.gbProfileCard.Controls.Add(this.label17);
+            this.gbProfileCard.Controls.Add(this.label16);
+            this.gbProfileCard.Location = new System.Drawing.Point(746, 23);
+            this.gbProfileCard.Name = "gbProfileCard";
+            this.gbProfileCard.Size = new System.Drawing.Size(316, 412);
+            this.gbProfileCard.TabIndex = 34;
+            this.gbProfileCard.TabStop = false;
+            this.gbProfileCard.Text = "Profile Card";
+            // 
+            // BtnReset
+            // 
+            this.BtnReset.Location = new System.Drawing.Point(142, 369);
+            this.BtnReset.Name = "BtnReset";
+            this.BtnReset.Size = new System.Drawing.Size(75, 23);
+            this.BtnReset.TabIndex = 65;
+            this.BtnReset.Text = "Reset";
+            this.BtnReset.UseVisualStyleBackColor = true;
+            this.BtnReset.Click += new System.EventHandler(this.BtnReset_Click);
+            // 
+            // BtnConfirm
+            // 
+            this.BtnConfirm.Location = new System.Drawing.Point(223, 369);
+            this.BtnConfirm.Name = "BtnConfirm";
+            this.BtnConfirm.Size = new System.Drawing.Size(75, 23);
+            this.BtnConfirm.TabIndex = 64;
+            this.BtnConfirm.Text = "Confirm";
+            this.BtnConfirm.UseVisualStyleBackColor = true;
+            this.BtnConfirm.Click += new System.EventHandler(this.BtnConfirm_Click);
+            // 
+            // lblAddPhoto
+            // 
+            this.lblAddPhoto.AutoSize = true;
+            this.lblAddPhoto.Location = new System.Drawing.Point(137, 71);
+            this.lblAddPhoto.Name = "lblAddPhoto";
+            this.lblAddPhoto.Size = new System.Drawing.Size(57, 13);
+            this.lblAddPhoto.TabIndex = 63;
+            this.lblAddPhoto.Text = "Add Photo";
+            this.lblAddPhoto.Click += new System.EventHandler(this.lblAddPhoto_Click);
+            // 
+            // TxtNumber
+            // 
+            this.TxtNumber.Location = new System.Drawing.Point(106, 310);
+            this.TxtNumber.MaxLength = 15;
+            this.TxtNumber.Name = "TxtNumber";
+            this.TxtNumber.Size = new System.Drawing.Size(192, 20);
+            this.TxtNumber.TabIndex = 62;
+            // 
+            // TxtAddress
+            // 
+            this.TxtAddress.Location = new System.Drawing.Point(106, 236);
+            this.TxtAddress.MaxLength = 150;
+            this.TxtAddress.Multiline = true;
+            this.TxtAddress.Name = "TxtAddress";
+            this.TxtAddress.Size = new System.Drawing.Size(192, 68);
+            this.TxtAddress.TabIndex = 61;
+            // 
+            // TxtGender
+            // 
+            this.TxtGender.Location = new System.Drawing.Point(106, 210);
+            this.TxtGender.MaxLength = 10;
+            this.TxtGender.Name = "TxtGender";
+            this.TxtGender.Size = new System.Drawing.Size(192, 20);
+            this.TxtGender.TabIndex = 60;
+            // 
+            // TxtBirthDate
+            // 
+            this.TxtBirthDate.Location = new System.Drawing.Point(106, 184);
+            this.TxtBirthDate.MaxLength = 30;
+            this.TxtBirthDate.Name = "TxtBirthDate";
+            this.TxtBirthDate.Size = new System.Drawing.Size(192, 20);
+            this.TxtBirthDate.TabIndex = 59;
+            // 
+            // TxtName
+            // 
+            this.TxtName.Location = new System.Drawing.Point(106, 159);
+            this.TxtName.MaxLength = 100;
+            this.TxtName.Name = "TxtName";
+            this.TxtName.Size = new System.Drawing.Size(192, 20);
+            this.TxtName.TabIndex = 34;
+            // 
+            // label18
+            // 
+            this.label18.AutoSize = true;
+            this.label18.Location = new System.Drawing.Point(14, 313);
+            this.label18.Name = "label18";
+            this.label18.Size = new System.Drawing.Size(84, 13);
+            this.label18.TabIndex = 58;
+            this.label18.Text = "Contact Number";
+            // 
             // MainMifareProg
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(732, 671);
+            this.ClientSize = new System.Drawing.Size(1081, 671);
+            this.Controls.Add(this.gbProfileCard);
             this.Controls.Add(this.dReadAll);
             this.Controls.Add(this.bReadAll);
             this.Controls.Add(this.gbValBlk);
@@ -813,6 +979,9 @@ namespace MifareCardProg
             this.gbValBlk.ResumeLayout(false);
             this.gbValBlk.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dReadAll)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.ProfilePict)).EndInit();
+            this.gbProfileCard.ResumeLayout(false);
+            this.gbProfileCard.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -887,6 +1056,21 @@ namespace MifareCardProg
         internal System.Windows.Forms.TextBox tbHextoStr;
         internal System.Windows.Forms.Button bReadAll;
         private System.Windows.Forms.DataGridView dReadAll;
+        private System.Windows.Forms.PictureBox ProfilePict;
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.Label label15;
+        private System.Windows.Forms.Label label16;
+        private System.Windows.Forms.Label label17;
+        private System.Windows.Forms.GroupBox gbProfileCard;
+        internal System.Windows.Forms.TextBox TxtNumber;
+        internal System.Windows.Forms.TextBox TxtAddress;
+        internal System.Windows.Forms.TextBox TxtGender;
+        internal System.Windows.Forms.TextBox TxtBirthDate;
+        internal System.Windows.Forms.TextBox TxtName;
+        private System.Windows.Forms.Label label18;
+        private System.Windows.Forms.Label lblAddPhoto;
+        internal System.Windows.Forms.Button BtnReset;
+        internal System.Windows.Forms.Button BtnConfirm;
     }
 }
 

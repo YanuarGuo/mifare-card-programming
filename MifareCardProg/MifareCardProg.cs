@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace MifareCardProg
 {
@@ -20,8 +20,8 @@ namespace MifareCardProg
 
         public bool connActive = false;
         public bool autoDet;
-        public byte[] SendBuff = new byte[263]; // Buffer untuk mengirim data ke kartu
-        public byte[] RecvBuff = new byte[263]; // Buffer untuk menerima data dari kartu
+        public byte[] SendBuff = new byte[263];
+        public byte[] RecvBuff = new byte[263];
         public int SendLen,
             RecvLen,
             nBytesRet,
@@ -29,8 +29,55 @@ namespace MifareCardProg
             Aprotocol,
             dwProtocol,
             cbPciLength;
-        public ModWinsCard.SCARD_READERSTATE RdrState; // Status pembaca kartu
-        public ModWinsCard.SCARD_IO_REQUEST pioSendRequest; // Struktur untuk request ke kartu
+        public ModWinsCard.SCARD_READERSTATE RdrState;
+        public ModWinsCard.SCARD_IO_REQUEST pioSendRequest;
+        private Bitmap originalImage;
+        private string loadedFilePath;
+        int[] availableBlocks = { 4, 5, 6, 8, 9, 10, 12, 13, 14 }; // Hindari sector trailer
+
+        private static readonly int[] SECTOR_TRAILERS =
+        {
+            3,
+            7,
+            11,
+            15,
+            19,
+            23,
+            27,
+            31,
+            35,
+            39,
+            43,
+            47,
+            51,
+            55,
+            59,
+            63,
+            67,
+            71,
+            75,
+            79,
+            83,
+            87,
+            91,
+            95,
+            99,
+            103,
+            107,
+            111,
+            115,
+            119,
+            123,
+            127,
+            143,
+            159,
+            175,
+            191,
+            207,
+            223,
+            239,
+            255,
+        };
 
         public MainMifareProg()
         {
@@ -86,7 +133,6 @@ namespace MifareCardProg
         {
             long indx;
 
-            // Ensure SendBuff and RecvBuff are correctly sized
             if (SendBuff.Length < 263 || RecvBuff.Length < 263)
             {
                 throw new InvalidOperationException("Buffer sizes are incorrect.");
@@ -94,66 +140,63 @@ namespace MifareCardProg
 
             for (indx = 0; indx <= 262; indx++)
             {
-                RecvBuff[indx] = 0; // Clear receive buffer
-                SendBuff[indx] = 0; // Clear send buffer
+                RecvBuff[indx] = 0;
+                SendBuff[indx] = 0;
             }
         }
 
         private void EnableButtons()
         {
-            bInit.Enabled = false; // Nonaktifkan tombol "Initialize"
-            bConnect.Enabled = true; // Aktifkan tombol "Connect"
-            bReset.Enabled = true; // Aktifkan tombol "Reset"
-            bClear.Enabled = true; // Aktifkan tombol "Clear"
+            bInit.Enabled = false;
+            bConnect.Enabled = true;
+            bReset.Enabled = true;
+            bClear.Enabled = true;
         }
 
         private void displayOut(int errType, int retVal, string PrintText)
         {
             switch (errType)
             {
-                case 0: // Tidak ada error, tampilkan pesan biasa
+                case 0:
                     break;
-                case 1: // Tampilkan pesan error berdasarkan kode error
+                case 1:
                     PrintText = ModWinsCard.GetScardErrMsg(retVal);
                     break;
-                case 2: // Format pesan dengan "<" di awal
+                case 2:
                     PrintText = "<" + PrintText;
                     break;
-                case 3: // Format pesan dengan ">" di awal
+                case 3:
                     PrintText = ">" + PrintText;
                     break;
             }
-            mMsg.Items.Add(PrintText); // Tambahkan pesan ke daftar pesan
-            mMsg.ForeColor = Color.Black; // Set warna teks menjadi hitam
-            mMsg.Focus(); // Fokus pada daftar pesan
+            mMsg.Items.Add(PrintText);
+            mMsg.ForeColor = Color.Black;
+            mMsg.Focus();
         }
 
         private void rbNonVolMem_CheckedChanged(object sender, EventArgs e)
         {
-            tMemAdd.Enabled = true; // Mengaktifkan input tMemAdd jika Non-Volatile Memory dipilih
+            tMemAdd.Enabled = true;
         }
 
         private void rbVolMem_CheckedChanged(object sender, EventArgs e)
         {
-            tMemAdd.Enabled = false; // Menonaktifkan input tMemAdd jika Volatile Memory dipilih
-            tMemAdd.Text = ""; // Mengosongkan nilai tMemAdd
+            tMemAdd.Enabled = false;
+            tMemAdd.Text = "";
         }
 
         private void bLoadKey_Click(object sender, EventArgs e)
         {
             byte tmpLong;
 
-            // Cek apakah salah satu radio button sudah dipilih
             if (!(rbNonVolMem.Checked) & !(rbVolMem.Checked))
             {
-                rbNonVolMem.Focus(); // Fokus ke rbNonVolMem jika belum ada yang dipilih
-                return; // Keluar dari fungsi
+                rbNonVolMem.Focus();
+                return;
             }
 
-            // Jika Non-Volatile Memory dipilih, lakukan validasi input tMemAdd
             if (rbNonVolMem.Checked)
             {
-                // Cek apakah tMemAdd kosong atau bukan angka dalam format hex
                 if (
                     tMemAdd.Text == ""
                     | !byte.TryParse(
@@ -164,20 +207,18 @@ namespace MifareCardProg
                     )
                 )
                 {
-                    tMemAdd.Focus(); // Fokus ke tMemAdd jika input salah
-                    tMemAdd.Text = ""; // Kosongkan input
-                    return; // Keluar dari fungsi
+                    tMemAdd.Focus();
+                    tMemAdd.Text = "";
+                    return;
                 }
 
-                // Cek apakah nilai dalam tMemAdd lebih dari 31 (1F dalam hex)
                 if (byte.Parse(tMemAdd.Text, System.Globalization.NumberStyles.HexNumber) > 31)
                 {
-                    tMemAdd.Text = "1F"; // Jika lebih dari 31, set nilai ke "1F"
-                    return; // Keluar dari fungsi
+                    tMemAdd.Text = "1F";
+                    return;
                 }
             }
 
-            // Validasi semua input kunci (tKey1 - tKey6)
             if (
                 tKey1.Text == ""
                 | !byte.TryParse(
@@ -268,43 +309,33 @@ namespace MifareCardProg
                 return;
             }
 
-            // Membersihkan buffer sebelum mengisi perintah
             ClearBuffers();
 
-            // Mengisi buffer untuk mengirim perintah APDU
-            SendBuff[0] = 0xFF; // CLA (Class Byte)
-            SendBuff[1] = 0x82; // INS (Instruction Byte)
-
-            // Menentukan jenis memori yang digunakan
+            SendBuff[0] = 0xFF;
+            SendBuff[1] = 0x82;
             if (rbNonVolMem.Checked)
             {
-                SendBuff[2] = 0x20; // P1 : Non-Volatile Memory
-                SendBuff[3] = byte.Parse(tMemAdd.Text, System.Globalization.NumberStyles.HexNumber); // P2 : Alamat memori
+                SendBuff[2] = 0x20;
+                SendBuff[3] = byte.Parse(tMemAdd.Text, System.Globalization.NumberStyles.HexNumber);
             }
             else
             {
-                SendBuff[2] = 0x00; // P1 : Volatile Memory
-                SendBuff[3] = 0x20; // P2 : Session Key
+                SendBuff[2] = 0x00;
+                SendBuff[3] = 0x20;
             }
 
-            SendBuff[4] = 0x06; // P3 : Panjang data (6 byte)
-
-            // Mengisi buffer dengan nilai kunci dari inputan pengguna
-            SendBuff[5] = byte.Parse(tKey1.Text, System.Globalization.NumberStyles.HexNumber); // Key 1
-            SendBuff[6] = byte.Parse(tKey2.Text, System.Globalization.NumberStyles.HexNumber); // Key 2
-            SendBuff[7] = byte.Parse(tKey3.Text, System.Globalization.NumberStyles.HexNumber); // Key 3
-            SendBuff[8] = byte.Parse(tKey4.Text, System.Globalization.NumberStyles.HexNumber); // Key 4
-            SendBuff[9] = byte.Parse(tKey5.Text, System.Globalization.NumberStyles.HexNumber); // Key 5
-            SendBuff[10] = byte.Parse(tKey6.Text, System.Globalization.NumberStyles.HexNumber); // Key 6
-
-            // Menentukan panjang buffer untuk dikirim dan diterima
+            SendBuff[4] = 0x06;
+            SendBuff[5] = byte.Parse(tKey1.Text, System.Globalization.NumberStyles.HexNumber);
+            SendBuff[6] = byte.Parse(tKey2.Text, System.Globalization.NumberStyles.HexNumber);
+            SendBuff[7] = byte.Parse(tKey3.Text, System.Globalization.NumberStyles.HexNumber);
+            SendBuff[8] = byte.Parse(tKey4.Text, System.Globalization.NumberStyles.HexNumber);
+            SendBuff[9] = byte.Parse(tKey5.Text, System.Globalization.NumberStyles.HexNumber);
+            SendBuff[10] = byte.Parse(tKey6.Text, System.Globalization.NumberStyles.HexNumber);
             SendLen = 11;
             RecvLen = 2;
 
-            // Mengirim perintah APDU dan menangani hasilnya
             retCode = SendAPDUandDisplay(0);
 
-            // Jika terjadi kesalahan dalam pengiriman APDU, keluar dari fungsi
             if (retCode != ModWinsCard.SCARD_S_SUCCESS)
             {
                 return;
@@ -364,7 +395,6 @@ namespace MifareCardProg
             int tempInt;
             byte tmpLong;
 
-            // Validasi input: pastikan tBlkNo tidak kosong dan bisa dikonversi ke integer
             if (tBlkNo.Text == "" | !int.TryParse(tBlkNo.Text, out tempInt))
             {
                 tBlkNo.Focus();
@@ -372,13 +402,11 @@ namespace MifareCardProg
                 return;
             }
 
-            // Batasi nilai tBlkNo maksimal 319
             if (int.Parse(tBlkNo.Text) > 319)
             {
                 tBlkNo.Text = "319";
             }
 
-            // Jika rbSource1 dipilih, validasi semua input kunci (tKeyIn1 - tKeyIn6)
             if (rbSource1.Checked == true)
             {
                 if (
@@ -473,7 +501,6 @@ namespace MifareCardProg
             }
             else
             {
-                // Jika rbSource3 dipilih, validasi tKeyAdd
                 if (rbSource3.Checked == true)
                 {
                     if (
@@ -491,7 +518,6 @@ namespace MifareCardProg
                         return;
                     }
 
-                    // Batasi nilai maksimal tKeyAdd ke 0x1F
                     if (
                         byte.Parse(tKeyAdd.Text, System.Globalization.NumberStyles.HexNumber) > 0x1F
                     )
@@ -502,22 +528,17 @@ namespace MifareCardProg
                 }
             }
 
-            // Bersihkan buffer sebelum mengirim perintah
             ClearBuffers();
-            SendBuff[0] = 0xFF; // CLA
-            SendBuff[1] = 0x00; // P1: Sama untuk semua sumber
-
+            SendBuff[0] = 0xFF;
+            SendBuff[1] = 0x00;
             if (rbSource1.Checked == true)
             {
-                // Menggunakan memori volatil untuk otentikasi
                 ClearBuffers();
-                SendBuff[0] = 0xFF; // CLS
-                SendBuff[1] = 0x82; // INS
-                SendBuff[2] = 0x00; // P1: Memori volatil
-                SendBuff[3] = 0x20; // P2: Kunci sesi
-                SendBuff[4] = 0x06; // P3: Panjang kunci (6 byte)
-
-                // Menyimpan nilai kunci 1-6 ke dalam buffer
+                SendBuff[0] = 0xFF;
+                SendBuff[1] = 0x82;
+                SendBuff[2] = 0x00;
+                SendBuff[3] = 0x20;
+                SendBuff[4] = 0x06;
                 SendBuff[5] = byte.Parse(tKeyIn1.Text, System.Globalization.NumberStyles.HexNumber);
                 SendBuff[6] = byte.Parse(tKeyIn2.Text, System.Globalization.NumberStyles.HexNumber);
                 SendBuff[7] = byte.Parse(tKeyIn3.Text, System.Globalization.NumberStyles.HexNumber);
@@ -528,80 +549,69 @@ namespace MifareCardProg
                     System.Globalization.NumberStyles.HexNumber
                 );
 
-                SendLen = 0x0B; // Panjang data yang dikirim
-                RecvLen = 0x02; // Panjang data yang diterima
-
+                SendLen = 0x0B;
+                RecvLen = 0x02;
                 retCode = SendAPDUandDisplay(0);
 
-                // Jika ada kesalahan, keluar dari fungsi
                 if (retCode != ModWinsCard.SCARD_S_SUCCESS)
                 {
                     return;
                 }
 
-                // Gunakan memori volatil untuk otentikasi
                 ClearBuffers();
-                SendBuff[0] = 0xFF; // CLA
-                SendBuff[1] = 0x86; // INS: Otentikasi dengan kunci yang tersimpan
-                SendBuff[2] = 0x00; // P1
-                SendBuff[3] = 0x00; // P2
-                SendBuff[4] = 0x05; // P3: Panjang data otentikasi
-                SendBuff[5] = 0x01; // Byte 1: Versi
-                SendBuff[6] = 0x00; // Byte 2
-                SendBuff[7] = (byte)int.Parse(tBlkNo.Text); // Byte 3: Nomor blok
-
-                // Pilih jenis kunci (Key A atau Key B)
+                SendBuff[0] = 0xFF;
+                SendBuff[1] = 0x86;
+                SendBuff[2] = 0x00;
+                SendBuff[3] = 0x00;
+                SendBuff[4] = 0x05;
+                SendBuff[5] = 0x01;
+                SendBuff[6] = 0x00;
+                SendBuff[7] = (byte)int.Parse(tBlkNo.Text);
                 if (rbKType1.Checked == true)
                 {
-                    SendBuff[8] = 0x60; // Key A
+                    SendBuff[8] = 0x60;
                 }
                 else
                 {
-                    SendBuff[8] = 0x61; // Key B
+                    SendBuff[8] = 0x61;
                 }
 
-                SendBuff[9] = 0x20; // Byte 5: Kunci sesi untuk memori volatil
+                SendBuff[9] = 0x20;
             }
             else
             {
-                // Otentikasi dengan sumber lain (non-volatil)
                 ClearBuffers();
-                SendBuff[0] = 0xFF; // CLA
-                SendBuff[1] = 0x86; // INS: Otentikasi dengan kunci yang tersimpan
-                SendBuff[2] = 0x00; // P1
-                SendBuff[3] = 0x00; // P2
-                SendBuff[4] = 0x05; // P3
-                SendBuff[5] = 0x01; // Byte 1: Versi
-                SendBuff[6] = 0x00; // Byte 2
-                SendBuff[7] = (byte)int.Parse(tBlkNo.Text); // Byte 3: Nomor blok
-
-                // Pilih jenis kunci (Key A atau Key B)
+                SendBuff[0] = 0xFF;
+                SendBuff[1] = 0x86;
+                SendBuff[2] = 0x00;
+                SendBuff[3] = 0x00;
+                SendBuff[4] = 0x05;
+                SendBuff[5] = 0x01;
+                SendBuff[6] = 0x00;
+                SendBuff[7] = (byte)int.Parse(tBlkNo.Text);
                 if (rbKType2.Checked == true)
                 {
-                    SendBuff[8] = 0x61; // Key A
+                    SendBuff[8] = 0x61;
                 }
                 else
                 {
-                    SendBuff[8] = 0x60; // Key B
+                    SendBuff[8] = 0x60;
                 }
 
-                // Gunakan kunci sesi berdasarkan sumber
                 if (rbSource2.Checked == true)
                 {
-                    SendBuff[9] = 0x20; // Kunci sesi untuk memori volatil
+                    SendBuff[9] = 0x20;
                 }
                 else
                 {
-                    SendBuff[9] = (byte)int.Parse(tKeyAdd.Text); // Kunci sesi untuk memori non-volatil
+                    SendBuff[9] = (byte)int.Parse(tKeyAdd.Text);
                 }
             }
 
-            SendLen = 0x0A; // Panjang data yang dikirim
-            RecvLen = 0x02; // Panjang data yang diterima
-
+            SendLen = 0x0A;
+            RecvLen = 0x02;
             retCode = SendAPDUandDisplay(0);
 
-            // Jika ada kesalahan, keluar dari fungsi
             if (retCode != ModWinsCard.SCARD_S_SUCCESS)
             {
                 return;
@@ -610,10 +620,8 @@ namespace MifareCardProg
 
         private void bValStor_Click(object sender, EventArgs e)
         {
-            long Amount; // Variabel untuk menyimpan jumlah nilai yang akan disimpan
-            int tempInt; // Variabel sementara untuk validasi input angka
-
-            // Validasi: Pastikan jumlah nilai (tValAmt) diisi dan merupakan angka
+            long Amount;
+            int tempInt;
             if (tValAmt.Text == "" | !int.TryParse(tValAmt.Text, out tempInt))
             {
                 tValAmt.Focus();
@@ -621,15 +629,13 @@ namespace MifareCardProg
                 return;
             }
 
-            // Validasi: Pastikan nilai yang dimasukkan tidak melebihi 4294967295 (batas 4-byte unsigned integer)
             if (Convert.ToInt64(tValAmt.Text) > 4294967295)
             {
-                tValAmt.Text = "4294967295"; // Jika lebih, set ke batas maksimum
+                tValAmt.Text = "4294967295";
                 tValAmt.Focus();
                 return;
             }
 
-            // Validasi: Pastikan nomor blok (tValBlk) diisi dan merupakan angka
             if (tValBlk.Text == "" | !int.TryParse(tValBlk.Text, out tempInt))
             {
                 tValBlk.Focus();
@@ -637,45 +643,33 @@ namespace MifareCardProg
                 return;
             }
 
-            // Validasi: Pastikan nomor blok tidak melebihi 319
             if (int.Parse(tValBlk.Text) > 319)
             {
                 tValBlk.Text = "319";
                 return;
             }
 
-            // Mengosongkan field sumber dan target sebelum menyimpan nilai
             tValSrc.Text = "";
             tValTar.Text = "";
 
-            // Konversi jumlah nilai ke tipe long
             Amount = Convert.ToInt64(tValAmt.Text);
 
-            // Mengosongkan buffer sebelum mengirim perintah baru
             ClearBuffers();
 
-            // Menyiapkan perintah APDU untuk menyimpan nilai ke kartu
-            SendBuff[0] = 0xFF; // CLA (Class of Instruction)
-            SendBuff[1] = 0xD7; // INS (Instruction: Store Value)
-            SendBuff[2] = 0x00; // P1 (Parameter 1)
-            SendBuff[3] = (byte)int.Parse(tValBlk.Text); // P2 (Nomor blok tempat menyimpan nilai)
-            SendBuff[4] = 0x05; // Lc (Jumlah byte yang akan dikirim)
-            SendBuff[5] = 0x00; // VB_OP Value (Operasi nilai)
-
-            // Memecah nilai Amount menjadi 4 byte untuk dikirim ke kartu
-            SendBuff[6] = (byte)((Amount >> 24) & 0xFF); // Byte ke-1 (paling signifikan)
-            SendBuff[7] = (byte)((Amount >> 16) & 0xFF); // Byte ke-2
-            SendBuff[8] = (byte)((Amount >> 8) & 0xFF); // Byte ke-3
-            SendBuff[9] = (byte)(Amount & 0xFF); // Byte ke-4 (paling tidak signifikan)
-
-            // Menentukan panjang data yang dikirim dan panjang respons yang diharapkan
+            SendBuff[0] = 0xFF;
+            SendBuff[1] = 0xD7;
+            SendBuff[2] = 0x00;
+            SendBuff[3] = (byte)int.Parse(tValBlk.Text);
+            SendBuff[4] = 0x05;
+            SendBuff[5] = 0x00;
+            SendBuff[6] = (byte)((Amount >> 24) & 0xFF);
+            SendBuff[7] = (byte)((Amount >> 16) & 0xFF);
+            SendBuff[8] = (byte)((Amount >> 8) & 0xFF);
+            SendBuff[9] = (byte)(Amount & 0xFF);
             SendLen = SendBuff[4] + 5;
-            RecvLen = 0x02; // Panjang respons (Status Word)
-
-            // Mengirim perintah ke kartu dan menampilkan respons
+            RecvLen = 0x02;
             retCode = SendAPDUandDisplay(2);
 
-            // Jika terjadi kesalahan, keluar dari fungsi
             if (retCode != ModWinsCard.SCARD_S_SUCCESS)
             {
                 return;
@@ -684,10 +678,8 @@ namespace MifareCardProg
 
         private void bValInc_Click(object sender, EventArgs e)
         {
-            long Amount; // Variabel untuk menyimpan jumlah nilai yang akan ditambahkan
-            int tempInt; // Variabel sementara untuk validasi input angka
-
-            // Validasi: Pastikan jumlah nilai (tValAmt) diisi dan merupakan angka
+            long Amount;
+            int tempInt;
             if (tValAmt.Text == "" | !int.TryParse(tValAmt.Text, out tempInt))
             {
                 tValAmt.Focus();
@@ -695,15 +687,13 @@ namespace MifareCardProg
                 return;
             }
 
-            // Validasi: Pastikan nilai yang dimasukkan tidak melebihi 4294967295 (batas 4-byte unsigned integer)
             if (Convert.ToInt64(tValAmt.Text) > 4294967295)
             {
-                tValAmt.Text = "4294967295"; // Jika lebih, set ke batas maksimum
+                tValAmt.Text = "4294967295";
                 tValAmt.Focus();
                 return;
             }
 
-            // Validasi: Pastikan nomor blok (tValBlk) diisi dan merupakan angka
             if (tValBlk.Text == "" | !int.TryParse(tValBlk.Text, out tempInt))
             {
                 tValBlk.Focus();
@@ -711,45 +701,33 @@ namespace MifareCardProg
                 return;
             }
 
-            // Validasi: Pastikan nomor blok tidak melebihi 319
             if (int.Parse(tValBlk.Text) > 319)
             {
                 tValBlk.Text = "319";
                 return;
             }
 
-            // Mengosongkan field sumber dan target sebelum menambahkan nilai
             tValSrc.Text = "";
             tValTar.Text = "";
 
-            // Konversi jumlah nilai ke tipe long
             Amount = Convert.ToInt64(tValAmt.Text);
 
-            // Mengosongkan buffer sebelum mengirim perintah baru
             ClearBuffers();
 
-            // Menyiapkan perintah APDU untuk menambahkan nilai ke kartu
-            SendBuff[0] = 0xFF; // CLA (Class of Instruction)
-            SendBuff[1] = 0xD7; // INS (Instruction: Increase Value)
-            SendBuff[2] = 0x00; // P1 (Parameter 1)
-            SendBuff[3] = (byte)int.Parse(tValBlk.Text); // P2 (Nomor blok tempat menambahkan nilai)
-            SendBuff[4] = 0x05; // Lc (Jumlah byte yang akan dikirim)
-            SendBuff[5] = 0x01; // VB_OP Value (1 = Increment Value)
-
-            // Memecah nilai Amount menjadi 4 byte untuk dikirim ke kartu
-            SendBuff[6] = (byte)((Amount >> 24) & 0xFF); // Byte ke-1 (paling signifikan)
-            SendBuff[7] = (byte)((Amount >> 16) & 0xFF); // Byte ke-2
-            SendBuff[8] = (byte)((Amount >> 8) & 0xFF); // Byte ke-3
-            SendBuff[9] = (byte)(Amount & 0xFF); // Byte ke-4 (paling tidak signifikan)
-
-            // Menentukan panjang data yang dikirim dan panjang respons yang diharapkan
+            SendBuff[0] = 0xFF;
+            SendBuff[1] = 0xD7;
+            SendBuff[2] = 0x00;
+            SendBuff[3] = (byte)int.Parse(tValBlk.Text);
+            SendBuff[4] = 0x05;
+            SendBuff[5] = 0x01;
+            SendBuff[6] = (byte)((Amount >> 24) & 0xFF);
+            SendBuff[7] = (byte)((Amount >> 16) & 0xFF);
+            SendBuff[8] = (byte)((Amount >> 8) & 0xFF);
+            SendBuff[9] = (byte)(Amount & 0xFF);
             SendLen = SendBuff[4] + 5;
-            RecvLen = 0x02; // Panjang respons (Status Word)
-
-            // Mengirim perintah ke kartu dan menampilkan respons
+            RecvLen = 0x02;
             retCode = SendAPDUandDisplay(2);
 
-            // Jika terjadi kesalahan, keluar dari fungsi
             if (retCode != ModWinsCard.SCARD_S_SUCCESS)
             {
                 return;
@@ -758,10 +736,8 @@ namespace MifareCardProg
 
         private void bValDec_Click(object sender, EventArgs e)
         {
-            long Amount; // Variabel untuk menyimpan jumlah nilai yang akan dikurangi
-            int tempInt; // Variabel sementara untuk validasi input angka
-
-            // Validasi: Pastikan jumlah nilai (tValAmt) diisi dan merupakan angka
+            long Amount;
+            int tempInt;
             if (tValAmt.Text == "" | !int.TryParse(tValAmt.Text, out tempInt))
             {
                 tValAmt.Focus();
@@ -769,15 +745,13 @@ namespace MifareCardProg
                 return;
             }
 
-            // Validasi: Pastikan nilai yang dimasukkan tidak melebihi 4294967295 (batas maksimum 4-byte unsigned integer)
             if (Convert.ToInt64(tValAmt.Text) > 4294967295)
             {
-                tValAmt.Text = "4294967295"; // Jika lebih, set ke batas maksimum
+                tValAmt.Text = "4294967295";
                 tValAmt.Focus();
                 return;
             }
 
-            // Validasi: Pastikan nomor blok (tValBlk) diisi dan merupakan angka
             if (tValBlk.Text == "" | !int.TryParse(tValBlk.Text, out tempInt))
             {
                 tValBlk.Focus();
@@ -785,45 +759,33 @@ namespace MifareCardProg
                 return;
             }
 
-            // Validasi: Pastikan nomor blok tidak melebihi 319
             if (int.Parse(tValBlk.Text) > 319)
             {
                 tValBlk.Text = "319";
                 return;
             }
 
-            // Mengosongkan field sumber dan target sebelum mengurangi nilai
             tValSrc.Text = "";
             tValTar.Text = "";
 
-            // Konversi jumlah nilai ke tipe long
             Amount = Convert.ToInt64(tValAmt.Text);
 
-            // Mengosongkan buffer sebelum mengirim perintah baru
             ClearBuffers();
 
-            // Menyiapkan perintah APDU untuk mengurangi nilai dari kartu
-            SendBuff[0] = 0xFF; // CLA (Class of Instruction)
-            SendBuff[1] = 0xD7; // INS (Instruction: Decrease Value)
-            SendBuff[2] = 0x00; // P1 (Parameter 1)
-            SendBuff[3] = (byte)int.Parse(tValBlk.Text); // P2 (Nomor blok tempat mengurangi nilai)
-            SendBuff[4] = 0x05; // Lc (Jumlah byte yang akan dikirim)
-            SendBuff[5] = 0x02; // VB_OP Value (2 = Decrement Value)
-
-            // Memecah nilai Amount menjadi 4 byte untuk dikirim ke kartu
-            SendBuff[6] = (byte)((Amount >> 24) & 0xFF); // Byte ke-1 (paling signifikan)
-            SendBuff[7] = (byte)((Amount >> 16) & 0xFF); // Byte ke-2
-            SendBuff[8] = (byte)((Amount >> 8) & 0xFF); // Byte ke-3
-            SendBuff[9] = (byte)(Amount & 0xFF); // Byte ke-4 (paling tidak signifikan)
-
-            // Menentukan panjang data yang dikirim dan panjang respons yang diharapkan
+            SendBuff[0] = 0xFF;
+            SendBuff[1] = 0xD7;
+            SendBuff[2] = 0x00;
+            SendBuff[3] = (byte)int.Parse(tValBlk.Text);
+            SendBuff[4] = 0x05;
+            SendBuff[5] = 0x02;
+            SendBuff[6] = (byte)((Amount >> 24) & 0xFF);
+            SendBuff[7] = (byte)((Amount >> 16) & 0xFF);
+            SendBuff[8] = (byte)((Amount >> 8) & 0xFF);
+            SendBuff[9] = (byte)(Amount & 0xFF);
             SendLen = SendBuff[4] + 5;
-            RecvLen = 0x02; // Panjang respons (Status Word)
-
-            // Mengirim perintah ke kartu dan menampilkan respons
+            RecvLen = 0x02;
             retCode = SendAPDUandDisplay(2);
 
-            // Jika terjadi kesalahan, keluar dari fungsi
             if (retCode != ModWinsCard.SCARD_S_SUCCESS)
             {
                 return;
@@ -832,49 +794,37 @@ namespace MifareCardProg
 
         private void bValRead_Click(object sender, EventArgs e)
         {
-            long Amount; // Variabel untuk menyimpan nilai yang dibaca dari kartu
-
-            // Validasi: Pastikan nomor blok tidak melebihi 319
+            long Amount;
             if (int.Parse(tValBlk.Text) > 319)
             {
                 tValBlk.Text = "319";
                 return;
             }
 
-            // Kosongkan field sebelum membaca nilai dari kartu
             tValAmt.Text = "";
             tValSrc.Text = "";
             tValTar.Text = "";
 
-            // Mengosongkan buffer sebelum mengirim perintah baru
             ClearBuffers();
 
-            // Menyiapkan perintah APDU untuk membaca nilai dari blok kartu
-            SendBuff[0] = 0xFF; // CLA (Class of Instruction)
-            SendBuff[1] = 0xB1; // INS (Instruction: Read Value)
-            SendBuff[2] = 0x00; // P1 (Parameter 1)
-            SendBuff[3] = (byte)int.Parse(tValBlk.Text); // P2 : Nomor blok yang akan dibaca
-            SendBuff[4] = 0x00; // Le (Panjang data yang diminta)
-
-            SendLen = 0x05; // Panjang perintah yang dikirim (5 byte)
-            RecvLen = 0x06; // Panjang respons yang diharapkan (6 byte)
-
-            // Mengirim perintah ke kartu dan mendapatkan respons
+            SendBuff[0] = 0xFF;
+            SendBuff[1] = 0xB1;
+            SendBuff[2] = 0x00;
+            SendBuff[3] = (byte)int.Parse(tValBlk.Text);
+            SendBuff[4] = 0x00;
+            SendLen = 0x05;
+            RecvLen = 0x06;
             retCode = SendAPDUandDisplay(2);
 
-            // Jika terjadi kesalahan, keluar dari fungsi
             if (retCode != ModWinsCard.SCARD_S_SUCCESS)
             {
                 return;
             }
 
-            // Mengonversi data yang diterima menjadi nilai dalam format integer 4-byte
-            Amount = RecvBuff[3]; // Byte ke-4 (paling tidak signifikan)
-            Amount = Amount + (RecvBuff[2] * 256); // Byte ke-3
-            Amount = Amount + (RecvBuff[1] * 256 * 256); // Byte ke-2
-            Amount = Amount + (RecvBuff[0] * 256 * 256 * 256); // Byte ke-1 (paling signifikan)
-
-            // Menampilkan hasil pembacaan nilai ke dalam field tValAmt
+            Amount = RecvBuff[3];
+            Amount = Amount + (RecvBuff[2] * 256);
+            Amount = Amount + (RecvBuff[1] * 256 * 256);
+            Amount = Amount + (RecvBuff[0] * 256 * 256 * 256);
             tValAmt.Text = Amount.ToString();
         }
 
@@ -882,7 +832,6 @@ namespace MifareCardProg
         {
             int tempInt;
 
-            // Validasi input untuk memastikan tidak ada nilai kosong dan format angka benar
             if (tValSrc.Text == "" | !int.TryParse(tValBlk.Text, out tempInt))
             {
                 tValSrc.Focus();
@@ -897,43 +846,34 @@ namespace MifareCardProg
                 return;
             }
 
-            // Validasi: Pastikan nomor blok sumber tidak lebih dari 319
             if (int.Parse(tValSrc.Text) > 319)
             {
                 tValSrc.Text = "319";
                 return;
             }
 
-            // Validasi: Pastikan nomor blok target tidak lebih dari 319
             if (int.Parse(tValTar.Text) > 319)
             {
                 tValTar.Text = "319";
                 return;
             }
 
-            // Kosongkan nilai blok dan jumlah nilai sebelum proses transfer
             tValAmt.Text = "";
             tValBlk.Text = "";
 
-            // Mengosongkan buffer sebelum mengirim perintah baru
             ClearBuffers();
 
-            // Menyiapkan perintah APDU untuk melakukan restore nilai dari blok sumber ke blok target
-            SendBuff[0] = 0xFF; // CLA (Class of Instruction)
-            SendBuff[1] = 0xD7; // INS (Instruction: Restore Value)
-            SendBuff[2] = 0x00; // P1 (Parameter 1)
-            SendBuff[3] = (byte)int.Parse(tValSrc.Text); // P2 : Nomor blok sumber
-            SendBuff[4] = 0x02; // Lc : Panjang data
-            SendBuff[5] = 0x03; // Data In Byte 1 (Kode operasi Restore)
-            SendBuff[6] = (byte)int.Parse(tValTar.Text); // P2 : Nomor blok tujuan
-
-            SendLen = 0x07; // Panjang perintah yang dikirim (7 byte)
-            RecvLen = 0x02; // Panjang respons yang diharapkan (2 byte)
-
-            // Mengirim perintah ke kartu dan mendapatkan respons
+            SendBuff[0] = 0xFF;
+            SendBuff[1] = 0xD7;
+            SendBuff[2] = 0x00;
+            SendBuff[3] = (byte)int.Parse(tValSrc.Text);
+            SendBuff[4] = 0x02;
+            SendBuff[5] = 0x03;
+            SendBuff[6] = (byte)int.Parse(tValTar.Text);
+            SendLen = 0x07;
+            RecvLen = 0x02;
             retCode = SendAPDUandDisplay(2);
 
-            // Jika terjadi kesalahan, keluar dari fungsi
             if (retCode != ModWinsCard.SCARD_S_SUCCESS)
             {
                 return;
@@ -944,59 +884,46 @@ namespace MifareCardProg
         {
             string tmpStr;
 
-            // Mengosongkan field tampilan data biner sebelum membaca
             tbHextoStr.Text = "";
 
-            // Validasi: Pastikan nomor blok diisi
             if (tBinBlk.Text == "")
             {
                 tBinBlk.Focus();
                 return;
             }
 
-            // Validasi: Pastikan nomor blok tidak melebihi 319
             if (int.Parse(tBinBlk.Text) > 319)
             {
                 tBinBlk.Text = "319";
                 return;
             }
 
-            // Validasi: Pastikan panjang data diisi
             if (tBinLen.Text == "")
             {
                 tBinLen.Focus();
                 return;
             }
 
-            // Mengosongkan buffer sebelum mengirim perintah baru
             ClearBuffers();
 
-            // Menyiapkan perintah APDU untuk membaca data dari kartu
-            SendBuff[0] = 0xFF; // CLA (Class of Instruction)
-            SendBuff[1] = 0xB0; // INS (Instruction: Read Binary)
-            SendBuff[2] = 0x00; // P1 (Parameter 1)
-            SendBuff[3] = (byte)int.Parse(tBinBlk.Text); // P2 (Nomor blok yang akan dibaca)
-            SendBuff[4] = (byte)int.Parse(tBinLen.Text); // P3 (Jumlah byte yang akan dibaca)
-
-            // Menentukan panjang data yang dikirim dan diterima
+            SendBuff[0] = 0xFF;
+            SendBuff[1] = 0xB0;
+            SendBuff[2] = 0x00;
+            SendBuff[3] = (byte)int.Parse(tBinBlk.Text);
+            SendBuff[4] = (byte)int.Parse(tBinLen.Text);
             SendLen = 5;
-            RecvLen = SendBuff[4] + 2; // Ditambah 2 untuk byte status respons
-
-            // Mengirim perintah ke kartu dan menampilkan respons
+            RecvLen = SendBuff[4] + 2;
             retCode = SendAPDUandDisplay(2);
 
-            // Jika terjadi kesalahan, keluar dari fungsi
             if (retCode != ModWinsCard.SCARD_S_SUCCESS)
             {
                 return;
             }
 
-            // Mengubah data yang diterima menjadi string dan menampilkannya
             tmpStr = "";
 
             tmpStr = ByteArrayToString(RecvBuff.Take(RecvLen - 2).ToArray());
 
-            // Menampilkan data yang dibaca ke dalam text field
             tbHextoStr.Text = tmpStr.ToUpper();
         }
 
@@ -1050,12 +977,11 @@ namespace MifareCardProg
             byte[] byteArray = StringToByteArray(tbHextoStr.Text);
             if (byteArray.Length != int.Parse(tBinLen.Text))
                 ClearBuffers();
-            SendBuff[0] = 0xFF; // CLA
-            SendBuff[1] = 0xD6; // INS
-            SendBuff[2] = 0x00; // P1
-            SendBuff[3] = (byte)int.Parse(tBinBlk.Text); // P2 : Starting Block No.
-            SendBuff[4] = (byte)int.Parse(tBinLen.Text); // P3 : Data length
-
+            SendBuff[0] = 0xFF;
+            SendBuff[1] = 0xD6;
+            SendBuff[2] = 0x00;
+            SendBuff[3] = (byte)int.Parse(tBinBlk.Text);
+            SendBuff[4] = (byte)int.Parse(tBinLen.Text);
             Array.Copy(byteArray, 0, SendBuff, 5, byteArray.Length);
 
             SendLen = SendBuff[4] + 5;
@@ -1113,7 +1039,7 @@ namespace MifareCardProg
                 16,
                 16,
                 16,
-            }; //256 blocks (4K card)
+            };
             int totalSectors = sectorSizes.Length;
             int blockIndex = 0;
             int bytesPerBlock = 16;
@@ -1218,12 +1144,11 @@ namespace MifareCardProg
 
         private void bInit_Click(object sender, EventArgs e)
         {
-            string ReaderList = "" + Convert.ToChar(0); // Inisialisasi daftar pembaca kartu
+            string ReaderList = "" + Convert.ToChar(0);
             int indx;
             int pcchReaders = 0;
             string rName = "";
 
-            // 1. Membangun konteks untuk komunikasi dengan smart card
             retCode = ModWinsCard.SCardEstablishContext(
                 ModWinsCard.SCARD_SCOPE_USER,
                 0,
@@ -1233,24 +1158,20 @@ namespace MifareCardProg
 
             if (retCode != ModWinsCard.SCARD_S_SUCCESS)
             {
-                displayOut(1, retCode, ""); // Menampilkan pesan kesalahan jika gagal
+                displayOut(1, retCode, "");
                 return;
             }
 
-            // 2. Mendapatkan daftar pembaca kartu PC/SC yang tersedia di sistem
             retCode = ModWinsCard.SCardListReaders(this.hContext, null, null, ref pcchReaders);
 
             if (retCode != ModWinsCard.SCARD_S_SUCCESS)
             {
-                displayOut(1, retCode, ""); // Menampilkan pesan kesalahan jika gagal mendapatkan daftar pembaca kartu
+                displayOut(1, retCode, "");
                 return;
             }
 
-            EnableButtons(); // Mengaktifkan tombol-tombol yang diperlukan
-
-            byte[] ReadersList = new byte[pcchReaders]; // Buffer untuk daftar pembaca kartu
-
-            // Mengisi daftar pembaca kartu
+            EnableButtons();
+            byte[] ReadersList = new byte[pcchReaders];
             retCode = ModWinsCard.SCardListReaders(
                 this.hContext,
                 null,
@@ -1272,22 +1193,19 @@ namespace MifareCardProg
             rName = "";
             indx = 0;
 
-            // Mengonversi buffer daftar pembaca kartu menjadi string
             while (ReadersList[indx] != 0)
             {
                 while (ReadersList[indx] != 0)
                 {
-                    rName = rName + (char)ReadersList[indx]; // Menyusun nama pembaca kartu karakter per karakter
+                    rName = rName + (char)ReadersList[indx];
                     indx = indx + 1;
                 }
 
-                // Menambahkan nama pembaca kartu ke dalam combobox
                 cbReader.Items.Add(rName);
                 rName = "";
                 indx = indx + 1;
             }
 
-            // Jika ada pembaca kartu yang tersedia, pilih yang pertama
             if (cbReader.Items.Count > 0)
             {
                 cbReader.SelectedIndex = 0;
@@ -1295,7 +1213,6 @@ namespace MifareCardProg
 
             indx = 1;
 
-            // Mencari pembaca kartu ACR128 PICC dan menjadikannya sebagai pembaca default
             for (indx = 1; indx <= cbReader.Items.Count - 1; indx++)
             {
                 cbReader.SelectedIndex = indx;
@@ -1311,18 +1228,15 @@ namespace MifareCardProg
 
         private void bConnect_Click(object sender, EventArgs e)
         {
-            // Menghubungkan ke pembaca kartu yang dipilih menggunakan handle hContext untuk mendapatkan handle hCard
             if (connActive)
             {
-                // Jika sudah terhubung sebelumnya, putuskan koneksi sebelum menyambungkan ulang
                 retCode = ModWinsCard.SCardDisconnect(hCard, ModWinsCard.SCARD_UNPOWER_CARD);
             }
 
-            // Membuka koneksi dengan mode eksklusif ke smart card
             retCode = ModWinsCard.SCardConnect(
                 hContext,
                 cbReader.Text,
-                ModWinsCard.SCARD_SHARE_EXCLUSIVE,
+                ModWinsCard.SCARD_SHARE_SHARED,
                 1 | 2,
                 ref hCard,
                 ref Protocol
@@ -1341,41 +1255,37 @@ namespace MifareCardProg
                 );
             }
 
-            connActive = true; // Menandai bahwa koneksi ke smart card aktif
-            gbLoadKeys.Enabled = true; // Mengubah group box Load Key menjadi aktif saat connect diklik
-            gbAuth.Enabled = true; // Mengubah group box Auth menjadi aktif saat connect diklik
-            gbBinOps.Enabled = true; // Mengubah group box Binary Ops menjadi aktif saat connect diklik
-            gbValBlk.Enabled = true; // Mengubah group box Value Block menjadi aktif saat connect diklik
-            rbSource1.Checked = true; // Memberikan nilai default kepada pilihan radio box
-            rbKType1.Checked = true; // Memberikan nilai default kepada pilihan radio box
+            connActive = true;
+            gbLoadKeys.Enabled = true;
+            gbAuth.Enabled = true;
+            gbBinOps.Enabled = true;
+            gbValBlk.Enabled = true;
+            rbSource1.Checked = true;
+            rbKType1.Checked = true;
         }
 
         private void bClear_Click(object sender, EventArgs e)
         {
-            // Menghapus semua pesan di daftar pesan UI
             mMsg.Items.Clear();
         }
 
         private void bReset_Click(object sender, EventArgs e)
         {
-            // Memutuskan koneksi jika masih terhubung
             if (connActive)
             {
                 retCode = ModWinsCard.SCardDisconnect(hCard, ModWinsCard.SCARD_UNPOWER_CARD);
             }
 
-            // Melepaskan konteks komunikasi dengan smart card
             retCode = ModWinsCard.SCardReleaseContext(hCard);
 
-            InitMenu(); // Mengatur ulang UI ke kondisi awal
+            InitMenu();
         }
 
         private void bQuit_Click(object sender, EventArgs e)
         {
-            // Mengakhiri aplikasi
-            retCode = ModWinsCard.SCardReleaseContext(hContext); // Melepaskan konteks komunikasi dengan kartu
-            retCode = ModWinsCard.SCardDisconnect(hCard, ModWinsCard.SCARD_UNPOWER_CARD); // Memutus koneksi dengan kartu
-            System.Environment.Exit(0); // Keluar dari aplikasi
+            retCode = ModWinsCard.SCardReleaseContext(hContext);
+            retCode = ModWinsCard.SCardDisconnect(hCard, ModWinsCard.SCARD_UNPOWER_CARD);
+            System.Environment.Exit(0);
         }
 
         private int SendAPDUandDisplay(int reqType)
@@ -1383,18 +1293,16 @@ namespace MifareCardProg
             int indx;
             string tmpStr;
 
-            // Mengatur protokol dan panjang data untuk pengiriman
             pioSendRequest.dwProtocol = Aprotocol;
             pioSendRequest.cbPciLength = 8;
 
-            // Menampilkan perintah APDU yang akan dikirim
             tmpStr = "";
             for (indx = 0; indx <= SendLen - 1; indx++)
             {
-                tmpStr = tmpStr + " " + string.Format("{0:X2}", SendBuff[indx]); // Format data dalam bentuk heksadesimal
+                tmpStr = tmpStr + " " + string.Format("{0:X2}", SendBuff[indx]);
             }
 
-            displayOut(2, 0, tmpStr); // Menampilkan APDU yang dikirim
+            displayOut(2, 0, tmpStr);
             retCode = ModWinsCard.SCardTransmit(
                 hCard,
                 ref pioSendRequest,
@@ -1407,7 +1315,7 @@ namespace MifareCardProg
 
             if (retCode != ModWinsCard.SCARD_S_SUCCESS)
             {
-                displayOut(1, retCode, ""); // Menampilkan pesan kesalahan jika transmisi gagal
+                displayOut(1, retCode, "");
                 return retCode;
             }
             else
@@ -1415,7 +1323,7 @@ namespace MifareCardProg
                 tmpStr = "";
                 switch (reqType)
                 {
-                    case 0: // Cek kode status (SW1 SW2)
+                    case 0:
                         for (indx = (RecvLen - 2); indx <= (RecvLen - 1); indx++)
                         {
                             tmpStr = tmpStr + " " + string.Format("{0:X2}", RecvBuff[indx]);
@@ -1427,7 +1335,7 @@ namespace MifareCardProg
                         }
                         break;
 
-                    case 1: // Membaca ATR (Answer to Reset)
+                    case 1:
                         for (indx = (RecvLen - 2); indx <= (RecvLen - 1); indx++)
                         {
                             tmpStr = tmpStr + string.Format("{0:X2}", RecvBuff[indx]);
@@ -1447,7 +1355,7 @@ namespace MifareCardProg
                         }
                         break;
 
-                    case 2: // Membaca seluruh data yang diterima
+                    case 2:
                         for (indx = 0; indx <= (RecvLen - 1); indx++)
                         {
                             tmpStr = tmpStr + " " + string.Format("{0:X2}", RecvBuff[indx]);
@@ -1455,7 +1363,7 @@ namespace MifareCardProg
                         break;
                 }
 
-                displayOut(3, 0, tmpStr.Trim()); // Menampilkan data yang diterima dari kartu
+                displayOut(3, 0, tmpStr.Trim());
             }
 
             return retCode;
@@ -1465,21 +1373,253 @@ namespace MifareCardProg
         {
             ClearBuffers();
 
-            // Mengatur perintah APDU untuk membaca UID kartu
-            SendBuff[0] = 0xFF; // CLA
-            SendBuff[1] = 0xCA; // INS
-            SendBuff[2] = 0x00; // P1
-            SendBuff[3] = 0x00; // P2
-            SendBuff[4] = 0x00; // Le (Expected length of response)
-
-            SendLen = 5; // Panjang dikirim
-            RecvLen = 10; // Panjang diterima
-
-            retCode = SendAPDUandDisplay(2); // Mengirim APDU dan menampilkan hasil
-
+            SendBuff[0] = 0xFF;
+            SendBuff[1] = 0xCA;
+            SendBuff[2] = 0x00;
+            SendBuff[3] = 0x00;
+            SendBuff[4] = 0x00;
+            SendLen = 5;
+            RecvLen = 10;
+            retCode = SendAPDUandDisplay(2);
             if (retCode != ModWinsCard.SCARD_S_SUCCESS)
             {
                 return;
+            }
+        }
+
+        //profile card
+        private List<byte[]> SplitData()
+        {
+            string hexData = EncodeProfileData();
+
+            hexData = hexData.Replace(" ", "");
+
+            byte[] byteArray = Enumerable
+                .Range(0, hexData.Length / 2)
+                .Select(i => Convert.ToByte(hexData.Substring(i * 2, 2), 16))
+                .ToArray();
+
+            int chunkSize = 16;
+            List<byte[]> splitDataList = new List<byte[]>();
+            for (int i = 0; i < byteArray.Length; i += chunkSize)
+            {
+                byte[] splitDataReturn = byteArray.Skip(i).Take(chunkSize).ToArray();
+                splitDataList.Add(splitDataReturn);
+                Debug.WriteLine(BitConverter.ToString(splitDataReturn).Replace("-", " "));
+            }
+            return splitDataList;
+        }
+
+        private void lblAddPhoto_Click(object sender, EventArgs e)
+        {
+            using OpenFileDialog ofd = new OpenFileDialog()
+            {
+                Filter =
+                    "Image Files(*.jpg; *.jpeg; *.gif; *.bmp; *.png)|*.jpg; *.jpeg; *.gif; *.bmp; *.png",
+            };
+
+            if (ofd.ShowDialog() == DialogResult.OK)
+            {
+                loadedFilePath = ofd.FileName;
+                originalImage = new Bitmap(loadedFilePath);
+
+                ProfilePict.SizeMode = PictureBoxSizeMode.Zoom;
+                ProfilePict.Image = originalImage;
+
+                UpdateLabelVisibility();
+            }
+        }
+
+        private void ProfilePict_Click(object sender, EventArgs e)
+        {
+            using OpenFileDialog ofd = new OpenFileDialog()
+            {
+                Filter =
+                    "Image Files(*.jpg; *.jpeg; *.gif; *.bmp; *.png)|*.jpg; *.jpeg; *.gif; *.bmp; *.png",
+            };
+
+            if (ofd.ShowDialog() == DialogResult.OK)
+            {
+                loadedFilePath = ofd.FileName;
+                originalImage = new Bitmap(loadedFilePath);
+
+                ProfilePict.SizeMode = PictureBoxSizeMode.Zoom;
+                ProfilePict.Image = originalImage;
+
+                UpdateLabelVisibility();
+            }
+        }
+
+        private void UpdateLabelVisibility()
+        {
+            if (ProfilePict.Image != null)
+            {
+                lblAddPhoto.Visible = false;
+            }
+            else if (ProfilePict.Image == null)
+            {
+                lblAddPhoto.Visible = true;
+            }
+            else
+            {
+                lblAddPhoto.Visible = true;
+            }
+        }
+
+        private void BtnReset_Click(object sender, EventArgs e)
+        {
+            TxtAddress.Text = "";
+            TxtBirthDate.Text = "";
+            TxtGender.Text = "";
+            TxtName.Text = "";
+            TxtNumber.Text = "";
+            ProfilePict.Image = null;
+            UpdateLabelVisibility();
+        }
+
+        private string EncodeProfileData()
+        {
+            string name = TxtName.Text.Trim();
+            string dob = TxtBirthDate.Text.Trim();
+            string gender = TxtGender.Text.Trim();
+            string address = TxtAddress.Text.Trim();
+            string phone = TxtNumber.Text.Trim();
+
+            byte[]? compressedImage = null;
+            if (ProfilePict.Image != null)
+            {
+                compressedImage = CompressImage(ProfilePict.Image, 40, 60, 80);
+            }
+            string hexImage =
+                compressedImage != null ? ConvertToHexWithHeader("PIC", compressedImage) : "PIC00";
+            string hexName = ConvertToHexWithHeader("NME", name);
+            string hexDOB = ConvertToHexWithHeader("DTE", dob);
+            string hexGender = ConvertToHexWithHeader("GDR", gender);
+            string hexAddress = ConvertToHexWithHeader("ADR", address);
+            string hexPhone = ConvertToHexWithHeader("NUM", phone);
+
+            return $"{hexImage} {hexName} {hexDOB} {hexGender} {hexAddress} {hexPhone}";
+        }
+
+        private void BtnConfirm_Click(object sender, EventArgs e)
+        {
+            DialogResult result = MessageBox.Show(
+                "Please make sure your information is correct!",
+                "Confirmation",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question
+            );
+
+            if (result == DialogResult.Yes)
+            {
+                EncodeProfileData();
+                SplitData();
+
+                //MessageBox.Show(
+                //    "Uploaded successfully!",
+                //    "Success",
+                //    MessageBoxButtons.OK,
+                //    MessageBoxIcon.Information
+                //);
+            }
+            else { }
+        }
+
+        private static string ConvertToHexWithHeader(string header, byte[] data)
+        {
+            string hexHeader = BitConverter
+                .ToString(Encoding.ASCII.GetBytes(header))
+                .Replace("-", "");
+            string hexData = BitConverter.ToString(data).Replace("-", "");
+            return $"{hexHeader} {hexData}";
+        }
+
+        private static string ConvertToHexWithHeader(string header, string data)
+        {
+            string hexHeader = BitConverter
+                .ToString(Encoding.ASCII.GetBytes(header))
+                .Replace("-", "");
+            string hexData = BitConverter.ToString(Encoding.ASCII.GetBytes(data)).Replace("-", "");
+            return $"{hexHeader} {hexData}";
+        }
+
+        private static byte[] CompressImage(
+            System.Drawing.Image image,
+            int width,
+            int height,
+            long quality
+        )
+        {
+            using Bitmap resizedImage = new Bitmap(image, new Size(width, height));
+            using MemoryStream ms = new MemoryStream();
+            ImageCodecInfo jpgEncoder = GetEncoder(ImageFormat.Jpeg);
+            EncoderParameters encoderParameters = new EncoderParameters(1);
+            encoderParameters.Param[0] = new EncoderParameter(
+                System.Drawing.Imaging.Encoder.Quality,
+                quality
+            );
+            resizedImage.Save(ms, jpgEncoder, encoderParameters);
+            return ms.ToArray();
+        }
+
+        private static ImageCodecInfo GetEncoder(ImageFormat format)
+        {
+            ImageCodecInfo[] codecs = ImageCodecInfo.GetImageDecoders();
+            foreach (ImageCodecInfo codec in codecs)
+            {
+                if (codec.FormatID == format.Guid)
+                {
+                    return codec;
+                }
+            }
+            return null;
+        }
+
+        private void WriteBlock(int block, byte[] data)
+        {
+            if (data.Length > 16)
+            {
+                Debug.WriteLine("Data terlalu besar untuk satu block!");
+                return;
+            }
+
+            SendBuff[0] = 0xFF;
+            SendBuff[1] = 0xD6;
+            SendBuff[2] = 0x00;
+            SendBuff[3] = (byte)block;
+            SendBuff[4] = (byte)data.Length;
+
+            Array.Copy(data, 0, SendBuff, 5, data.Length);
+
+            SendLen = SendBuff[4] + 5;
+            RecvLen = 0x00;
+
+            retCode = SendAPDUandDisplay(2);
+
+            if (retCode != ModWinsCard.SCARD_S_SUCCESS)
+            {
+                Debug.WriteLine($"Gagal menulis ke block {block}");
+            }
+            else
+            {
+                Debug.WriteLine($"Berhasil menulis ke block {block}");
+            }
+        }
+
+        private void WriteProfileData()
+        {
+            List<byte[]> splitData = SplitData();
+            int block = 4;
+
+            foreach (var data in splitData)
+            {
+                while (SECTOR_TRAILERS.Contains(block))
+                {
+                    block++;
+                }
+
+                WriteBlock(block, data);
+                block++;
             }
         }
     }
