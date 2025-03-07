@@ -98,17 +98,6 @@ namespace MifareCardProg
             this.label10 = new System.Windows.Forms.Label();
             this.bReadAll = new System.Windows.Forms.Button();
             this.dReadAll = new System.Windows.Forms.DataGridView();
-            this.tcAccessBits = new System.Windows.Forms.TabControl();
-            this.tpBlock0 = new System.Windows.Forms.TabPage();
-            this.tpBlock1 = new System.Windows.Forms.TabPage();
-            this.tpBlock2 = new System.Windows.Forms.TabPage();
-            this.tpST = new System.Windows.Forms.TabPage();
-            this.tAB4 = new System.Windows.Forms.TextBox();
-            this.tAB3 = new System.Windows.Forms.TextBox();
-            this.tAB2 = new System.Windows.Forms.TextBox();
-            this.tAB1 = new System.Windows.Forms.TextBox();
-            this.label9 = new System.Windows.Forms.Label();
-            this.btnCalculateAccessBits = new System.Windows.Forms.Button();
             this.gbLoadKeys.SuspendLayout();
             this.gbAuth.SuspendLayout();
             this.gbKType.SuspendLayout();
@@ -116,7 +105,6 @@ namespace MifareCardProg
             this.gbBinOps.SuspendLayout();
             this.gbValBlk.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dReadAll)).BeginInit();
-            this.tcAccessBits.SuspendLayout();
             this.SuspendLayout();
             // 
             // Label1
@@ -788,121 +776,11 @@ namespace MifareCardProg
             this.dReadAll.Size = new System.Drawing.Size(385, 222);
             this.dReadAll.TabIndex = 52;
             // 
-            // tcAccessBits
-            // 
-            this.tcAccessBits.Controls.Add(this.tpBlock0);
-            this.tcAccessBits.Controls.Add(this.tpBlock1);
-            this.tcAccessBits.Controls.Add(this.tpBlock2);
-            this.tcAccessBits.Controls.Add(this.tpST);
-            this.tcAccessBits.Location = new System.Drawing.Point(743, 23);
-            this.tcAccessBits.Name = "tcAccessBits";
-            this.tcAccessBits.SelectedIndex = 0;
-            this.tcAccessBits.Size = new System.Drawing.Size(536, 233);
-            this.tcAccessBits.TabIndex = 54;
-            // 
-            // tpBlock0
-            // 
-            this.tpBlock0.Location = new System.Drawing.Point(4, 22);
-            this.tpBlock0.Name = "tpBlock0";
-            this.tpBlock0.Padding = new System.Windows.Forms.Padding(3);
-            this.tpBlock0.Size = new System.Drawing.Size(528, 207);
-            this.tpBlock0.TabIndex = 0;
-            this.tpBlock0.Text = "Data Block 0";
-            this.tpBlock0.UseVisualStyleBackColor = true;
-            // 
-            // tpBlock1
-            // 
-            this.tpBlock1.Location = new System.Drawing.Point(4, 22);
-            this.tpBlock1.Name = "tpBlock1";
-            this.tpBlock1.Padding = new System.Windows.Forms.Padding(3);
-            this.tpBlock1.Size = new System.Drawing.Size(528, 207);
-            this.tpBlock1.TabIndex = 1;
-            this.tpBlock1.Text = "Data Block 1";
-            this.tpBlock1.UseVisualStyleBackColor = true;
-            // 
-            // tpBlock2
-            // 
-            this.tpBlock2.Location = new System.Drawing.Point(4, 22);
-            this.tpBlock2.Name = "tpBlock2";
-            this.tpBlock2.Padding = new System.Windows.Forms.Padding(3);
-            this.tpBlock2.Size = new System.Drawing.Size(528, 207);
-            this.tpBlock2.TabIndex = 2;
-            this.tpBlock2.Text = "Data Block 2";
-            this.tpBlock2.UseVisualStyleBackColor = true;
-            // 
-            // tpST
-            // 
-            this.tpST.Location = new System.Drawing.Point(4, 22);
-            this.tpST.Name = "tpST";
-            this.tpST.Padding = new System.Windows.Forms.Padding(3);
-            this.tpST.Size = new System.Drawing.Size(528, 207);
-            this.tpST.TabIndex = 3;
-            this.tpST.Text = "Sector Trailer";
-            this.tpST.UseVisualStyleBackColor = true;
-            // 
-            // tAB4
-            // 
-            this.tAB4.Location = new System.Drawing.Point(901, 270);
-            this.tAB4.MaxLength = 2;
-            this.tAB4.Name = "tAB4";
-            this.tAB4.Size = new System.Drawing.Size(23, 20);
-            this.tAB4.TabIndex = 59;
-            // 
-            // tAB3
-            // 
-            this.tAB3.Location = new System.Drawing.Point(872, 270);
-            this.tAB3.MaxLength = 2;
-            this.tAB3.Name = "tAB3";
-            this.tAB3.Size = new System.Drawing.Size(23, 20);
-            this.tAB3.TabIndex = 58;
-            // 
-            // tAB2
-            // 
-            this.tAB2.Location = new System.Drawing.Point(843, 270);
-            this.tAB2.MaxLength = 2;
-            this.tAB2.Name = "tAB2";
-            this.tAB2.Size = new System.Drawing.Size(23, 20);
-            this.tAB2.TabIndex = 57;
-            // 
-            // tAB1
-            // 
-            this.tAB1.Location = new System.Drawing.Point(814, 270);
-            this.tAB1.MaxLength = 2;
-            this.tAB1.Name = "tAB1";
-            this.tAB1.Size = new System.Drawing.Size(23, 20);
-            this.tAB1.TabIndex = 56;
-            // 
-            // label9
-            // 
-            this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(744, 273);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(62, 13);
-            this.label9.TabIndex = 55;
-            this.label9.Text = "Access Bits";
-            // 
-            // btnCalculateAccessBits
-            // 
-            this.btnCalculateAccessBits.Location = new System.Drawing.Point(1179, 267);
-            this.btnCalculateAccessBits.Name = "btnCalculateAccessBits";
-            this.btnCalculateAccessBits.Size = new System.Drawing.Size(100, 23);
-            this.btnCalculateAccessBits.TabIndex = 60;
-            this.btnCalculateAccessBits.Text = "Convert";
-            this.btnCalculateAccessBits.UseVisualStyleBackColor = true;
-            this.btnCalculateAccessBits.Click += new System.EventHandler(this.btnCalculateAccessBits_Click);
-            // 
             // MainMifareProg
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1291, 671);
-            this.Controls.Add(this.btnCalculateAccessBits);
-            this.Controls.Add(this.tAB4);
-            this.Controls.Add(this.tAB3);
-            this.Controls.Add(this.tAB2);
-            this.Controls.Add(this.tAB1);
-            this.Controls.Add(this.label9);
-            this.Controls.Add(this.tcAccessBits);
+            this.ClientSize = new System.Drawing.Size(732, 671);
             this.Controls.Add(this.dReadAll);
             this.Controls.Add(this.bReadAll);
             this.Controls.Add(this.gbValBlk);
@@ -935,7 +813,6 @@ namespace MifareCardProg
             this.gbValBlk.ResumeLayout(false);
             this.gbValBlk.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dReadAll)).EndInit();
-            this.tcAccessBits.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1010,17 +887,6 @@ namespace MifareCardProg
         internal System.Windows.Forms.TextBox tbHextoStr;
         internal System.Windows.Forms.Button bReadAll;
         private System.Windows.Forms.DataGridView dReadAll;
-        private System.Windows.Forms.TabControl tcAccessBits;
-        private System.Windows.Forms.TabPage tpBlock0;
-        private System.Windows.Forms.TabPage tpBlock1;
-        private System.Windows.Forms.TabPage tpBlock2;
-        private System.Windows.Forms.TabPage tpST;
-        internal System.Windows.Forms.TextBox tAB4;
-        internal System.Windows.Forms.TextBox tAB3;
-        internal System.Windows.Forms.TextBox tAB2;
-        internal System.Windows.Forms.TextBox tAB1;
-        private System.Windows.Forms.Label label9;
-        internal System.Windows.Forms.Button btnCalculateAccessBits;
     }
 }
 
